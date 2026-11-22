@@ -48,6 +48,21 @@ public final class WeatherClientEvents {
     }
 
     @SubscribeEvent
+    public static void shake(ViewportEvent.ComputeCameraAngles e) {
+        if (!com.paulorchard.islandcraft.weatherofarrakis.ClientConfig.SHAKE_ENABLED.get()) return;
+        float amp = ShakeClient.amplitude();
+        if (ClientWeather.isStorm() && ClientWeather.tremble() && outdoor > 0.5f) amp += 0.07f * outdoor;
+        amp *= com.paulorchard.islandcraft.weatherofarrakis.ClientConfig.SHAKE_SCALE.get().floatValue();
+        if (amp <= 0.001f) return;
+        double t = net.minecraft.util.Util.getMillis() / 1000.0;
+        float deg = 1.6f * amp;
+        e.setYaw(e.getYaw() + deg * (float) (Math.sin(t * 41.0) * 0.6 + Math.sin(t * 23.0 + 1.3) * 0.4));
+        e.setPitch(e.getPitch() + deg * (float) (Math.sin(t * 37.0 + 0.7) * 0.6 + Math.sin(t * 19.0) * 0.4));
+        float roll = com.paulorchard.islandcraft.weatherofarrakis.ClientConfig.SHAKE_ROLL_DEGREES.get().floatValue();
+        if (roll > 0f) e.setRoll(e.getRoll() + roll * amp * (float) Math.sin(t * 29.0));
+    }
+
+    @SubscribeEvent
     public static void fogColor(ViewportEvent.ComputeFogColor e) {
         if (!ClientWeather.isActive()) return;
         ClientWeather.Look look = ClientWeather.current();
@@ -58,6 +73,19 @@ public final class WeatherClientEvents {
         e.setRed(Mth.lerp(k, e.getRed(), 0.62f * bright));
         e.setGreen(Mth.lerp(k, e.getGreen(), 0.34f * bright));
         e.setBlue(Mth.lerp(k, e.getBlue(), 0.12f * bright));
+        frontTint(e, bright);
+    }
+
+    /** Storm front, approach B (experimental, server switch storm_front): fog colour gets redder the more the camera looks upwind. */
+    private static void frontTint(ViewportEvent.ComputeFogColor e, float bright) {
+        if (!ClientWeather.front() || ClientWeather.kind() != 2) return;
+        var f = e.getCamera().forwardVector();
+        float dot = f.x() * -ClientWeather.windX() + f.z() * -ClientWeather.windZ();
+        float k = Mth.clamp(dot, 0f, 1f) * ClientWeather.current().horizon() * outdoor * 0.7f;
+        if (k <= 0.001f) return;
+        e.setRed(Mth.lerp(k, e.getRed(), 0.85f * bright));
+        e.setGreen(Mth.lerp(k, e.getGreen(), 0.25f * bright));
+        e.setBlue(Mth.lerp(k, e.getBlue(), 0.06f * bright));
     }
 
     @SubscribeEvent
@@ -103,6 +131,7 @@ public final class WeatherClientEvents {
     @SubscribeEvent
     public static void logout(ClientPlayerNetworkEvent.LoggingOut e) {
         ClientWeather.reset();
+        ShakeClient.clear();
         wind = null;
     }
 

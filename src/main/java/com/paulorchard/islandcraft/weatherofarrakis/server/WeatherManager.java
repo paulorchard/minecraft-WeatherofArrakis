@@ -39,6 +39,7 @@ public final class WeatherManager {
         data.setDirty();
         dispatch(level, w, events);
         if (level.getGameTime() % 20 == 0) Exposure.tickSecond(level);
+        Lightning.tick(level);
         sync(level, w);
     }
 
@@ -49,6 +50,7 @@ public final class WeatherManager {
                 broadcast(level, warningMessage(w, warn));
             } else if (e instanceof WeatherEvent.PhaseChanged pc) {
                 if (pc.to() == Phase.STORM) for (ServerPlayer pl : level.players()) Exposure.announce(level, pl);
+                if (pc.to() == Phase.STORM) Lightning.stormStartShake(level);
                 if (pc.to() == Phase.STORM) broadcast(level, Component.translatable("islandcraft_weatherofarrakis.coriolis.arrival", name(w.major)).withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
                 if (pc.from() == Phase.STORM && pc.to() == Phase.CLEARING) broadcast(level, Component.translatable("islandcraft_weatherofarrakis.coriolis.end", name(w.major)).withStyle(ChatFormatting.GREEN));
                 StormQuery.firePhaseChange(level, pc.from(), pc.to());
@@ -97,6 +99,10 @@ public final class WeatherManager {
     // ---- client sync ----
 
     public static WeatherPayload effective(ServerLevel level, LevelWeather w) {
+        return base(level, w).withFlags(WeatherConfig.SHAKE_TREMBLE.get(), WeatherConfig.STORM_FRONT.get());
+    }
+
+    private static WeatherPayload base(ServerLevel level, LevelWeather w) {
         float[] wind = WeatherConfig.windVector();
         float fraction = WeatherConfig.STAGE_BLEND_FRACTION.get().floatValue();
         Params p = WeatherConfig.params();
@@ -140,7 +146,7 @@ public final class WeatherManager {
         }
         LevelWeather w = state(level);
         WeatherPayload now = effective(level, w);
-        PacketDistributor.sendToPlayer(player, new WeatherPayload(now.kind(), now.stage(), now.intensity(), now.windX(), now.windZ(), 0f, now.major()));
+        PacketDistributor.sendToPlayer(player, new WeatherPayload(now.kind(), now.stage(), now.intensity(), now.windX(), now.windZ(), 0f, now.major(), now.tremble(), now.front()));
     }
 
     public static void onServerStopped() {

@@ -42,6 +42,7 @@ public final class ClientWeather {
     private static boolean major;
     private static float windX = 1f, windZ = 0f;
     private static int kind;
+    private static boolean tremble, front;
 
     private ClientWeather() {}
 
@@ -60,6 +61,8 @@ public final class ClientWeather {
         kind = p.kind();
         storm = p.kind() == WeatherPayload.STORM;
         major = p.major();
+        tremble = p.tremble();
+        front = p.front();
         windX = p.windX();
         windZ = p.windZ();
     }
@@ -86,6 +89,8 @@ public final class ClientWeather {
 
     public static boolean isStorm() { return storm; }
     public static boolean isMajor() { return major; }
+    public static boolean tremble() { return tremble; }
+    public static boolean front() { return front; }
     public static int kind() { return kind; }
     public static float windX() { return windX; }
     public static float windZ() { return windZ; }

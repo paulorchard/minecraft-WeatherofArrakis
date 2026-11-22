@@ -19,6 +19,7 @@ public class WeatherOfArrakis {
 
     public WeatherOfArrakis(IEventBus modEventBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.SERVER, WeatherConfig.SPEC);
+        container.registerConfig(ModConfig.Type.CLIENT, com.paulorchard.islandcraft.weatherofarrakis.ClientConfig.SPEC);
         modEventBus.addListener(RegisterPayloadHandlersEvent.class, WeatherOfArrakis::registerPayloads);
         modEventBus.addListener(net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent.class, e -> e.enqueueWork(com.paulorchard.islandcraft.weatherofarrakis.claims.ClaimProviders::init));
         NeoForge.EVENT_BUS.register(ServerEvents.class);
@@ -27,6 +28,8 @@ public class WeatherOfArrakis {
 
     private static void registerPayloads(RegisterPayloadHandlersEvent event) {
         event.registrar("1").playToClient(WeatherPayload.TYPE, WeatherPayload.CODEC,
-                (payload, ctx) -> ctx.enqueueWork(() -> com.paulorchard.islandcraft.weatherofarrakis.client.ClientWeather.apply(payload)));
+                (payload, ctx) -> ctx.enqueueWork(() -> com.paulorchard.islandcraft.weatherofarrakis.client.ClientWeather.apply(payload)))
+                .playToClient(com.paulorchard.islandcraft.weatherofarrakis.net.ShakePayload.TYPE, com.paulorchard.islandcraft.weatherofarrakis.net.ShakePayload.CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() -> com.paulorchard.islandcraft.weatherofarrakis.client.ShakeClient.add(payload.strength(), payload.seconds())));
     }
 }

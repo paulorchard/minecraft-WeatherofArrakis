@@ -25,6 +25,10 @@ public final class WeatherCommands {
                                 .then(Commands.argument("stormSeconds", IntegerArgumentType.integer(1, 36000))
                                         .executes(c -> start(c.getSource(), IntegerArgumentType.getInteger(c, "approachSeconds"), IntegerArgumentType.getInteger(c, "stormSeconds"))))))
                 .then(Commands.literal("stop").executes(c -> stop(c.getSource())))
+                .then(Commands.literal("strike")
+                        .executes(c -> strike(c.getSource(), null, null))
+                        .then(Commands.argument("x", com.mojang.brigadier.arguments.DoubleArgumentType.doubleArg()).then(Commands.argument("z", com.mojang.brigadier.arguments.DoubleArgumentType.doubleArg())
+                                .executes(c -> strike(c.getSource(), com.mojang.brigadier.arguments.DoubleArgumentType.getDouble(c, "x"), com.mojang.brigadier.arguments.DoubleArgumentType.getDouble(c, "z"))))))
                 .then(Commands.literal("major")
                         .then(Commands.literal("cancel").executes(c -> MajorCommands.cancel(c.getSource())))
                         .then(Commands.argument("minutes", IntegerArgumentType.integer(1, 10000))
@@ -90,6 +94,15 @@ public final class WeatherCommands {
             return 0;
         }
         src.sendSuccess(() -> text("Coriolis storm started: approach " + approach + " s, storm " + stormSeconds + " s (a test storm never resets chunks)."), true);
+        return 1;
+    }
+
+    private static int strike(CommandSourceStack src, Double x, Double z) {
+        ServerLevel level = src.getLevel();
+        double sx = x != null ? x : src.getPosition().x + 20 + level.getRandom().nextInt(20);
+        double sz = z != null ? z : src.getPosition().z + level.getRandom().nextInt(20) - 10;
+        Lightning.strike(level, sx, sz);
+        src.sendSuccess(() -> text(String.format(Locale.ROOT, "Lightning strike at %.0f %.0f.", sx, sz)), true);
         return 1;
     }
 

@@ -15,9 +15,19 @@ import net.minecraft.resources.Identifier;
  * @param windX       unit vector the wind blows towards
  * @param blendSeconds seconds the client takes to blend from what it shows to this
  * @param major       true for a Major Coriolis storm (cosmetic)
+ * @param tremble     server setting: faint tremble while exposed in the storm
+ * @param front       server setting: storm_front (directional fog tint during the approach)
  */
-public record WeatherPayload(int kind, int stage, float intensity, float windX, float windZ, float blendSeconds, boolean major)
+public record WeatherPayload(int kind, int stage, float intensity, float windX, float windZ, float blendSeconds, boolean major, boolean tremble, boolean front)
         implements CustomPacketPayload {
+    public WeatherPayload(int kind, int stage, float intensity, float windX, float windZ, float blendSeconds, boolean major) {
+        this(kind, stage, intensity, windX, windZ, blendSeconds, major, false, false);
+    }
+
+    public WeatherPayload withFlags(boolean tremble, boolean front) {
+        return new WeatherPayload(kind, stage, intensity, windX, windZ, blendSeconds, major, tremble, front);
+    }
+
     public static final int NONE = 0, SANDSTORM = 1, APPROACH = 2, STORM = 3;
 
     public static final Type<WeatherPayload> TYPE = new Type<>(Identifier.fromNamespaceAndPath(WeatherOfArrakis.MOD_ID, "weather"));
@@ -30,8 +40,10 @@ public record WeatherPayload(int kind, int stage, float intensity, float windX, 
                 buf.writeFloat(p.windZ);
                 buf.writeFloat(p.blendSeconds);
                 buf.writeBoolean(p.major);
+                buf.writeBoolean(p.tremble);
+                buf.writeBoolean(p.front);
             },
-            buf -> new WeatherPayload(buf.readByte(), buf.readByte(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readBoolean()));
+            buf -> new WeatherPayload(buf.readByte(), buf.readByte(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readBoolean(), buf.readBoolean(), buf.readBoolean()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
