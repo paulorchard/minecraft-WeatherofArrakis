@@ -20,6 +20,7 @@ public class WeatherOfArrakis {
     public WeatherOfArrakis(IEventBus modEventBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.SERVER, WeatherConfig.SPEC);
         modEventBus.addListener(RegisterPayloadHandlersEvent.class, WeatherOfArrakis::registerPayloads);
+        modEventBus.addListener(net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent.class, e -> e.enqueueWork(com.paulorchard.islandcraft.weatherofarrakis.claims.ClaimProviders::init));
         NeoForge.EVENT_BUS.register(ServerEvents.class);
         LOGGER.info("IslandCraft - Weather of Arrakis loaded");
     }

@@ -22,5 +22,11 @@
   "islandcraft_weatherofarrakis.exposure.warning": "You are exposed! Find shelter!",
   "islandcraft_weatherofarrakis.exposure.damage": "The storm is tearing at you!",
   "islandcraft_weatherofarrakis.exposure.start.exposed": "You are exposed to the storm. Find shelter!",
-  "islandcraft_weatherofarrakis.exposure.start.sheltered": "You are sheltered from the storm."
+  "islandcraft_weatherofarrakis.exposure.start.sheltered": "You are sheltered from the storm.",
+  "islandcraft_weatherofarrakis.major.announce": "A Major Coriolis storm will strike in %s. It will sweep everyone from Arrakis.",
+  "islandcraft_weatherofarrakis.major.reminder": "Major Coriolis storm in %s.",
+  "islandcraft_weatherofarrakis.major.cancelled": "The Major Coriolis storm has been called off.",
+  "islandcraft_weatherofarrakis.major.kick": "The Coriolis storm has swept you from Arrakis.",
+  "islandcraft_weatherofarrakis.major.refused": "The Coriolis storm is still sweeping Arrakis. Come back soon.",
+  "islandcraft_weatherofarrakis.rescue": "The storm has reshaped the land. You dig yourself out of the sand."
 }

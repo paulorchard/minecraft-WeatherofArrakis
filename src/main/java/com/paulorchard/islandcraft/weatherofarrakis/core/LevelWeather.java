@@ -154,7 +154,11 @@ public final class LevelWeather {
             }
             case STORM -> {
                 elapsedTicks++;
-                if (elapsedTicks >= stormTicks) {
+                if (elapsedTicks >= stormTicks && major) {
+                    elapsedTicks = 0;
+                    phase = Phase.MAJOR_RESET;
+                    out.add(new WeatherEvent.PhaseChanged(Phase.STORM, Phase.MAJOR_RESET));
+                } else if (elapsedTicks >= stormTicks) {
                     elapsedTicks = 0;
                     clearingTicks = p.clearingTicks();
                     phase = Phase.CLEARING;
@@ -217,6 +221,24 @@ public final class LevelWeather {
             sandNextTicks = -1;
             startSandstorm(between(rng, p.sandDurationMinTicks(), p.sandDurationMaxTicks()), out);
         }
+    }
+
+    /** Major storm: the reset pass is over (or the window ran out); the level waits for logins to reopen. */
+    public void toMajorWait(List<WeatherEvent> out) {
+        if (phase != Phase.MAJOR_RESET) return;
+        phase = Phase.MAJOR_WAIT;
+        elapsedTicks = 0;
+        out.add(new WeatherEvent.PhaseChanged(Phase.MAJOR_RESET, Phase.MAJOR_WAIT));
+    }
+
+    /** Major storm over: CALM. The ordinary storm date is kept if still in the future and re-rolled if it has gone by. */
+    public void endMajor(Params p, long clockNow, Random rng, List<WeatherEvent> out) {
+        Phase from = phase;
+        phase = Phase.CALM;
+        elapsedTicks = 0;
+        major = false;
+        if (scheduledAt < 0 || scheduledAt <= clockNow) scheduleNext(p, clockNow, rng);
+        if (from != Phase.CALM) out.add(new WeatherEvent.PhaseChanged(from, Phase.CALM));
     }
 
     /** After load: Major phases cannot be resumed and become CALM. Returns true if that happened. */
