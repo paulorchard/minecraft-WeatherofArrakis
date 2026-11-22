@@ -1,5 +1,5 @@
 # Report — Prompt 02 Weather of Arrakis: fix the sandstorm look by adapting Immersive Storms
-Status: partly (diagnosed, ported, proven by logs and screenshots in the dev client with and without Sodium/Iris + Photon; the cause of the owner's "nothing showed" without shaders could not be reproduced)   Commit / tag: step-5 (see `git tag`)
+Status: partly (diagnosed, ported, proven by logs and screenshots in the dev client with and without Sodium/Iris + Photon; the cause of the owner's "nothing showed" without shaders could not be reproduced)   Commit / tag: step-5 4e27a0d
 
 ## Diagnosis (Part A)
 Run: dev client (`runClient`) against the dev server, desert superflat, `/sandstorm start 2`. Counters were added (`ClientDebug`), logged once a second as `[storm-debug]`, plus `/storm_debug` and `/storm_debug shot`.
