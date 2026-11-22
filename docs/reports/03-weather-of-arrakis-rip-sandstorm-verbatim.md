@@ -1,5 +1,5 @@
 # Report — Prompt 03 Weather of Arrakis: rip Immersive Storms' sandstorm verbatim
-Status: done (copy runs and matches upstream's own jar in the dev client, no shaders; shader and real-player feel need the owner)   Commit / tag: step-6 HASH
+Status: done (copy runs and matches upstream's own jar in the dev client, no shaders; shader and real-player feel need the owner)   Commit / tag: step-6 e720cb9
 
 ## What was built
 - Copy of Immersive Storms (TheDeathlyCow, LGPL-3.0-or-later, branch 26.1.x, commit 66c883b5c1facba2219c9a31e1f93acfe2e333c9) into `com.paulorchard.islandcraft.weatherofarrakis.storms`: 74 Java files (62 copied, 12 of ours: shim, boot, plugin), 5 shared + 5 client mixins, resources (sounds, particles, textures, biome tags, mixin configs, services). Full list and every edit by rule: `NOTICE.md`.
