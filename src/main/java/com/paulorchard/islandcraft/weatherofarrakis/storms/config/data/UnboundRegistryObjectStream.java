@@ -57,6 +57,9 @@ public sealed interface UnboundRegistryObjectStream<T> permits UnboundRegistryOb
     record Tag<T>(TagKey<T> tag) implements UnboundRegistryObjectStream<T> {
         @Override
         public Stream<Holder<T>> listHolders(HolderLookup<T> lookup) {
+            if (this.tag.location().equals(com.paulorchard.islandcraft.weatherofarrakis.storms.registry.tag.ISBiomeTags.ALL_BIOMES.location())) {
+                return lookup.listElements().map(h -> (Holder<T>) h); // IslandCraft: pseudo tag = every entry
+            }
             return lookup.get(this.tag).map(HolderSet.ListBacked::stream).orElseGet(Stream::empty);
         }
 

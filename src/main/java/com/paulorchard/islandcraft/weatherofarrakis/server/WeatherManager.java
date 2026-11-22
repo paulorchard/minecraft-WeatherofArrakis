@@ -180,7 +180,6 @@ public final class WeatherManager {
      * has_sandstorms biomes. MinecraftServer.setWeatherParameters sets clearTime 0, rainTime and thunderTime to the duration, raining and thundering.
      */
     public static boolean startSandstorm(ServerLevel level, int minutes, boolean thunder) {
-        if (!WeatherConfig.isQualifying(level)) return false;
         level.getServer().setWeatherParameters(0, minutes * 1200, true, thunder);
         return true;
     }

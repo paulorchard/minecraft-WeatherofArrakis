@@ -121,7 +121,7 @@ public final class WeatherCommands {
             return 0;
         }
         var wd = level.getServer().getWorldData();
-        src.sendSuccess(() -> text("Sandstorm (vanilla rain" + (thunder ? " and thunder" : "") + ") set for " + minutes + " minute(s); it shows in desert, badlands and savanna biomes. Rain gradient now " + String.format(Locale.ROOT, "%.2f", level.getRainLevel(1f))), true);
+        src.sendSuccess(() -> text("Sandstorm (vanilla rain" + (thunder ? " and thunder" : "") + ") set for " + minutes + " minute(s); it shows in every biome that has rain (the Nether and End have no weather). Rain gradient now " + String.format(Locale.ROOT, "%.2f", level.getRainLevel(1f))), true);
         return 1;
     }
 

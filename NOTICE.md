@@ -42,6 +42,7 @@ The three `dust_grain` textures and the particle JSON have no credit line upstre
 - Upstream's `inject-interface` lines (Fabric Loom classtweaker) become `META-INF/interfaceinjection.json` plus `interfaceInjectionData` in `build.gradle`, which only makes the interface methods visible at compile time; the mixins still implement the interface at run time.
 - The three `accessible class` lines of upstream's classtweaker are appended to our `META-INF/accesstransformer.cfg`.
 - `build.gradle`: `compileOnly maven.modrinth:DistantHorizonsApi:7.0.0` (build-only, as upstream; StormFogModifier compiles against it and only uses it when Distant Horizons is loaded).
+- **Sandstorm in every biome (owner request after step-6, deliberate deviation):** `ISBiomeTags` gains `ALL_BIOMES`; `UnboundRegistryObjectStream.Tag.listHolders` resolves that pseudo tag to every biome; `AdvancedSettings.sandstormBiomes()` adds it. The upstream tag list stays, so the red and pink colour entries still apply. `/sandstorm start` has no dimension check.
 - Two subtitle keys are added to our `lang/en_us.json`.
 
 ## Left out of the copy

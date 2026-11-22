@@ -257,6 +257,7 @@ public class AdvancedSettings {
         return ImmutableList.<UnboundRegistryObjectStream<Biome>>builder()
                 .addAll(redSandstormBiomes().build())
                 .addAll(pinkSandstormBiomes().build())
+                .add(tag(ISBiomeTags.ALL_BIOMES)) // IslandCraft: sandstorm in every biome (upstream: only the tags below)
                 .add(tag(ISBiomeTags.HAS_SANDSTORMS))
                 .add(tag(BiomeTags.IS_SAVANNA))
                 .add(tag(CommonBiomeTags.IS_DESERT))
