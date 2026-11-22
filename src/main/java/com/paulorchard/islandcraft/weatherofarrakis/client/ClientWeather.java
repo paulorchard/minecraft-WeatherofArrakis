@@ -47,6 +47,7 @@ public final class ClientWeather {
     private ClientWeather() {}
 
     public static void apply(WeatherPayload p) {
+        ClientDebug.onPayload(p, net.minecraft.client.Minecraft.getInstance().level == null ? -1 : net.minecraft.client.Minecraft.getInstance().level.getGameTime());
         Look now = current();
         Look target = switch (p.kind()) {
             case WeatherPayload.SANDSTORM -> SANDSTORM;

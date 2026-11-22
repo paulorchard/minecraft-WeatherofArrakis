@@ -64,12 +64,14 @@ public final class WeatherClientEvents {
 
     @SubscribeEvent
     public static void fogColor(ViewportEvent.ComputeFogColor e) {
+        ClientDebug.colorEvents++;
         if (!ClientWeather.isActive()) return;
         ClientWeather.Look look = ClientWeather.current();
         float k = look.horizon() * outdoor;
         if (k <= 0.001f) return;
         float luma = Mth.clamp(0.2126f * e.getRed() + 0.7152f * e.getGreen() + 0.0722f * e.getBlue(), 0f, 1f);
         float bright = Mth.clamp(0.15f + luma * 1.1f, 0f, 1f); // keeps night dark: the sand colour is scaled by the vanilla daylight
+        ClientDebug.colorApplied++;
         e.setRed(Mth.lerp(k, e.getRed(), 0.62f * bright));
         e.setGreen(Mth.lerp(k, e.getGreen(), 0.34f * bright));
         e.setBlue(Mth.lerp(k, e.getBlue(), 0.12f * bright));
@@ -90,6 +92,7 @@ public final class WeatherClientEvents {
 
     @SubscribeEvent
     public static void fog(ViewportEvent.RenderFog e) {
+        ClientDebug.fogEvents++;
         if (!ClientWeather.isActive() || e.getType() != FogType.ATMOSPHERIC) return;
         ClientWeather.Look look = ClientWeather.current();
         float k = outdoor;
@@ -100,6 +103,8 @@ public final class WeatherClientEvents {
         float endNow = d.environmentalEnd;
         float end = Mth.lerp(k, endNow, Math.min(endNow, target));
         float start = Mth.lerp(k, d.environmentalStart, Math.min(d.environmentalStart, target * 0.1f));
+        ClientDebug.fogApplied++;
+        ClientDebug.fogEnd = end;
         e.setFarPlaneDistance(end);
         e.setNearPlaneDistance(start);
         d.renderDistanceEnd = Math.min(d.renderDistanceEnd, Mth.lerp(k, d.renderDistanceEnd, end));
@@ -116,16 +121,41 @@ public final class WeatherClientEvents {
         public static void layers(RegisterGuiLayersEvent e) {
             // Directly above the camera overlays (so below crosshair, hotbar and the rest of the HUD).
             e.registerAbove(VanillaGuiLayers.CAMERA_OVERLAYS, Identifier.fromNamespaceAndPath(WeatherOfArrakis.MOD_ID, "sand_overlay"), (g, delta) -> {
+                ClientDebug.overlayDraws++;
                 if (!ClientWeather.isActive()) return;
                 ClientWeather.Look l = ClientWeather.current();
                 float a = outdoorNow() * Mth.clamp(l.sky() * 0.12f + (1f - l.sun()) * 0.60f + l.overlay() * 0.25f, 0f, 0.78f);
                 if (a < 0.01f) return;
                 Minecraft mc = Minecraft.getInstance();
+                ClientDebug.overlayDrawn++;
+                ClientDebug.overlayAlpha = a;
                 int alpha = (int) (a * 255) & 0xFF;
                 int rgb = 0x3A1E08; // warm dark brown: dims the light and tints sky and sun
                 g.fill(0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight(), (alpha << 24) | rgb);
             });
         }
+    }
+
+    @SubscribeEvent
+    public static void debugCommand(net.neoforged.neoforge.client.event.RegisterClientCommandsEvent e) {
+        e.getDispatcher().register(net.minecraft.commands.Commands.literal("storm_debug").executes(c -> {
+            Minecraft mc = Minecraft.getInstance();
+            var p = ClientDebug.last;
+            String s = "payloads=" + ClientDebug.payloads + (p == null ? " (none received)" : " last: kind=" + p.kind() + " stage=" + p.stage() + " intensity=" + p.intensity() + " wind=(" + p.windX() + "," + p.windZ() + ") blend=" + p.blendSeconds() + "s received at game time " + ClientDebug.lastGameTime)
+                    + "; dimension=" + (mc.level == null ? "none" : mc.level.dimension().identifier()) + "; outdoor=" + ClientDebug.outdoor + "; look=" + ClientWeather.current()
+                    + "; fog end=" + ClientDebug.fogEnd + "; particles/s=" + ClientDebug.particlesPerSec + "; overlay alpha=" + ClientDebug.overlayAlpha + "; wind playing=" + ClientDebug.windPlaying + " vol=" + ClientDebug.windVolume;
+            c.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal(s), false);
+            return 1;
+        }));
+    }
+
+    @SubscribeEvent
+    public static void shotCommand(net.neoforged.neoforge.client.event.RegisterClientCommandsEvent e) {
+        e.getDispatcher().register(net.minecraft.commands.Commands.literal("storm_debug").then(net.minecraft.commands.Commands.literal("shot").executes(c -> {
+            StormShot.request("storm-manual", 2f);
+            c.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal("Screenshot in 2 s (GUI hidden)."), false);
+            return 1;
+        })));
     }
 
     @SubscribeEvent
@@ -146,6 +176,9 @@ public final class WeatherClientEvents {
 
         // wind bed: one looping sound whose volume follows the look; quieter indoors and underground
         float vol = look.wind() * (0.12f + 0.88f * out);
+        ClientDebug.outdoor = out;
+        ClientDebug.windVolume = vol;
+        ClientDebug.windPlaying = wind != null && !wind.isStopped();
         if (vol > 0.005f) {
             if (wind == null || wind.isStopped()) {
                 wind = new WindLoop();
@@ -160,6 +193,8 @@ public final class WeatherClientEvents {
             }
         }
 
+        ClientDebug.tick(ClientWeather.isActive());
+        StormShot.tick();
         // blowing sand, driven from the wind direction, outdoors only
         float rate = look.particles() * out;
         if (rate > 0.01f && !mc.isPaused()) {
@@ -171,6 +206,7 @@ public final class WeatherClientEvents {
                 double oz = (level.getRandom().nextDouble() - 0.5) * 24 - wz * 10;
                 double oy = level.getRandom().nextDouble() * 7 - 1.5;
                 double speed = 0.35 + 0.35 * look.wind();
+                ClientDebug.particles++;
                 level.addParticle(sand, player.getX() + ox, player.getY() + oy, player.getZ() + oz, wx * speed, 0.02, wz * speed);
             }
         }

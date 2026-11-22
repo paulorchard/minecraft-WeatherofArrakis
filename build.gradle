@@ -48,6 +48,8 @@ neoForge {
     runs {
         client {
             client()
+            if (project.hasProperty('quickplay')) programArguments.addAll('--quickPlayMultiplayer', project.property('quickplay'))
+            if (project.hasProperty('autoshot')) jvmArguments.add('-Dislandcraft.weather.autoshot=' + project.property('autoshot'))
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
@@ -127,6 +129,12 @@ configurations {
 }
 
 dependencies {
+    if (project.hasProperty('sodium')) {
+        localRuntime files('C:/Users/paulo/curseforge/minecraft/Instances/ArrakisTest01/mods/sodium-neoforge-0.9.2+mc26.1.2.jar')
+    }
+    if (project.hasProperty('iris')) {
+        localRuntime files('C:/Users/paulo/curseforge/minecraft/Instances/ArrakisTest01/mods/iris-neoforge-1.11.4+mc26.1.2.jar')
+    }
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
