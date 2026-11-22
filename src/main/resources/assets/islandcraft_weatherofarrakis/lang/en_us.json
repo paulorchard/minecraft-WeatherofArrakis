@@ -15,5 +15,12 @@
   "islandcraft_weatherofarrakis.coriolis.arrival": "The %s is upon you.",
   "islandcraft_weatherofarrakis.coriolis.end": "The storm has passed.",
   "islandcraft_weatherofarrakis.coriolis.join.approach": "A %s is approaching. It arrives in %s. Find shelter.",
-  "islandcraft_weatherofarrakis.coriolis.join.storm": "The %s is upon you."
+  "islandcraft_weatherofarrakis.coriolis.join.storm": "The %s is upon you.",
+  "death.attack.arrakis_coriolis_storm": "%1$s was flayed by the Coriolis storm",
+  "death.attack.arrakis_coriolis_storm.player": "%1$s was flayed by the Coriolis storm whilst fighting %2$s",
+  "islandcraft_weatherofarrakis.exposure.sheltered": "You are sheltered.",
+  "islandcraft_weatherofarrakis.exposure.warning": "You are exposed! Find shelter!",
+  "islandcraft_weatherofarrakis.exposure.damage": "The storm is tearing at you!",
+  "islandcraft_weatherofarrakis.exposure.start.exposed": "You are exposed to the storm. Find shelter!",
+  "islandcraft_weatherofarrakis.exposure.start.sheltered": "You are sheltered from the storm."
 }

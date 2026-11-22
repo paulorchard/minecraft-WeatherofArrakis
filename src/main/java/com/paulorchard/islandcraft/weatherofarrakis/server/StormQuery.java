@@ -48,4 +48,9 @@ public final class StormQuery {
         LevelWeather w = WeatherManager.state(level);
         return w.sandstormIntensity(WeatherConfig.params().sandRampTicks());
     }
+
+    /** True when the player is outside any shelter right now (the Part 5 rules, ignoring phase and game mode). */
+    public static boolean isExposed(net.minecraft.server.level.ServerPlayer player) {
+        return Exposure.isExposed(player);
+    }
 }

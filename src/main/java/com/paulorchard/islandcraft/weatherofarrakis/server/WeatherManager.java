@@ -38,6 +38,7 @@ public final class WeatherManager {
         List<WeatherEvent> events = w.tick(p, level.getOverworldClockTime(), RNG);
         data.setDirty();
         dispatch(level, w, events);
+        if (level.getGameTime() % 20 == 0) Exposure.tickSecond(level);
         sync(level, w);
     }
 
@@ -47,6 +48,7 @@ public final class WeatherManager {
             if (e instanceof WeatherEvent.Warning warn) {
                 broadcast(level, warningMessage(w, warn));
             } else if (e instanceof WeatherEvent.PhaseChanged pc) {
+                if (pc.to() == Phase.STORM) for (ServerPlayer pl : level.players()) Exposure.announce(level, pl);
                 if (pc.to() == Phase.STORM) broadcast(level, Component.translatable("islandcraft_weatherofarrakis.coriolis.arrival", name(w.major)).withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
                 if (pc.from() == Phase.STORM && pc.to() == Phase.CLEARING) broadcast(level, Component.translatable("islandcraft_weatherofarrakis.coriolis.end", name(w.major)).withStyle(ChatFormatting.GREEN));
                 StormQuery.firePhaseChange(level, pc.from(), pc.to());

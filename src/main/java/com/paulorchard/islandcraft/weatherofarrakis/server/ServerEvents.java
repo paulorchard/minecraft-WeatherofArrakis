@@ -46,6 +46,16 @@ public final class ServerEvents {
     }
 
     @SubscribeEvent
+    public static void death(net.neoforged.neoforge.event.entity.living.LivingDeathEvent e) {
+        Exposure.onDeath(e);
+    }
+
+    @SubscribeEvent
+    public static void logout(PlayerEvent.PlayerLoggedOutEvent e) {
+        Exposure.forget(e.getEntity().getUUID());
+    }
+
+    @SubscribeEvent
     public static void stopped(ServerStoppedEvent e) {
         WeatherManager.onServerStopped();
     }
