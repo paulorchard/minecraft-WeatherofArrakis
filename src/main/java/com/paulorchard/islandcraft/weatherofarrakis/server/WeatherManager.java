@@ -118,9 +118,8 @@ public final class WeatherManager {
                 return new WeatherPayload(WeatherPayload.NONE, 0, 0f, wind[0], wind[1], w.clearingTicks / 20f, false);
             }
             default -> {
-                float ramp = p.sandRampTicks() / 20f;
-                if (w.sandActive && w.sandTicksLeft > p.sandRampTicks()) return new WeatherPayload(WeatherPayload.SANDSTORM, 0, 1f, wind[0], wind[1], ramp, false);
-                return new WeatherPayload(WeatherPayload.NONE, 0, 0f, wind[0], wind[1], ramp, false);
+                // Prompt 03: the sandstorm payload kind is no longer sent; sandstorms are vanilla rain rendered by the copied Immersive Storms code.
+                return new WeatherPayload(WeatherPayload.NONE, 0, 0f, wind[0], wind[1], p.sandRampTicks() / 20f, false);
             }
         }
     }
@@ -176,22 +175,18 @@ public final class WeatherManager {
         sync(level, w);
     }
 
-    public static boolean startSandstorm(ServerLevel level, int minutes) {
+    /**
+     * Prompt 03 trigger: a sandstorm is vanilla rain (and thunder) for the given time, which the copied Immersive Storms code turns into a sandstorm in
+     * has_sandstorms biomes. MinecraftServer.setWeatherParameters sets clearTime 0, rainTime and thunderTime to the duration, raining and thundering.
+     */
+    public static boolean startSandstorm(ServerLevel level, int minutes, boolean thunder) {
         if (!WeatherConfig.isQualifying(level)) return false;
-        LevelWeather w = state(level);
-        if (w.phase != Phase.CALM || w.sandActive) return false;
-        List<WeatherEvent> ev = new java.util.ArrayList<>();
-        w.startSandstorm(minutes * 1200, ev);
-        WeatherData.get(level.getServer()).setDirty();
-        sync(level, w);
+        level.getServer().setWeatherParameters(0, minutes * 1200, true, thunder);
         return true;
     }
 
+    /** Ends the rain at once and restores clear weather (the vanilla /weather clear behaviour). */
     public static void stopSandstorm(ServerLevel level) {
-        LevelWeather w = state(level);
-        List<WeatherEvent> ev = new java.util.ArrayList<>();
-        w.stopSandstorm(ev);
-        WeatherData.get(level.getServer()).setDirty();
-        sync(level, w);
+        level.getServer().setWeatherParameters(ServerLevel.RAIN_DELAY.sample(level.getRandom()), 0, false, false);
     }
 }

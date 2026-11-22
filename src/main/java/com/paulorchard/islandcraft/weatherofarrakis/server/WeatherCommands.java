@@ -50,9 +50,11 @@ public final class WeatherCommands {
                                 .executes(c -> MajorCommands.mark(c.getSource(), new net.minecraft.world.level.ChunkPos(IntegerArgumentType.getInteger(c, "chunkX"), IntegerArgumentType.getInteger(c, "chunkZ"))))))));
         d.register(Commands.literal("sandstorm").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.literal("start")
-                        .executes(c -> sandStart(c.getSource(), 5))
+                        .executes(c -> sandStart(c.getSource(), 1, false))
                         .then(Commands.argument("minutes", IntegerArgumentType.integer(1, 600))
-                                .executes(c -> sandStart(c.getSource(), IntegerArgumentType.getInteger(c, "minutes")))))
+                                .executes(c -> sandStart(c.getSource(), IntegerArgumentType.getInteger(c, "minutes"), false))
+                                .then(Commands.literal("thunder").executes(c -> sandStart(c.getSource(), IntegerArgumentType.getInteger(c, "minutes"), true))))
+                        .then(Commands.literal("thunder").executes(c -> sandStart(c.getSource(), 1, true))))
                 .then(Commands.literal("stop").executes(c -> sandStop(c.getSource()))));
     }
 
@@ -112,12 +114,14 @@ public final class WeatherCommands {
         return 1;
     }
 
-    private static int sandStart(CommandSourceStack src, int minutes) {
-        if (!WeatherManager.startSandstorm(src.getLevel(), minutes)) {
-            src.sendFailure(text("Cannot start a sandstorm here (inactive dimension, a sandstorm or a Coriolis storm is running)."));
+    private static int sandStart(CommandSourceStack src, int minutes, boolean thunder) {
+        var level = src.getLevel();
+        if (!WeatherManager.startSandstorm(level, minutes, thunder)) {
+            src.sendFailure(text("Cannot start a sandstorm here: this dimension is not in the dimensions config."));
             return 0;
         }
-        src.sendSuccess(() -> text("Sandstorm started for " + minutes + " minutes."), true);
+        var wd = level.getServer().getWorldData();
+        src.sendSuccess(() -> text("Sandstorm (vanilla rain" + (thunder ? " and thunder" : "") + ") set for " + minutes + " minute(s); it shows in desert, badlands and savanna biomes. Rain gradient now " + String.format(Locale.ROOT, "%.2f", level.getRainLevel(1f))), true);
         return 1;
     }
 

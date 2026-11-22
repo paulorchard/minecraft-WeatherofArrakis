@@ -1,0 +1,142 @@
+// Adapted for IslandCraft - Weather of Arrakis; see NOTICE.md
+package com.paulorchard.islandcraft.weatherofarrakis.storms.config.section;
+
+import com.paulorchard.islandcraft.weatherofarrakis.storms.ImmersiveStorms;
+import com.paulorchard.islandcraft.weatherofarrakis.storms.config.Translate;
+import com.paulorchard.islandcraft.weatherofarrakis.storms.client.world.WeatherArchetype;
+import com.paulorchard.islandcraft.weatherofarrakis.storms.shim.yacl.ConfigClassHandler;
+import com.paulorchard.islandcraft.weatherofarrakis.storms.shim.yacl.SerialEntry;
+import com.paulorchard.islandcraft.weatherofarrakis.storms.shim.yacl.AutoGen;
+import com.paulorchard.islandcraft.weatherofarrakis.storms.shim.yacl.FloatSlider;
+import com.paulorchard.islandcraft.weatherofarrakis.storms.shim.yacl.TickBox;
+import com.paulorchard.islandcraft.weatherofarrakis.storms.shim.yacl.GsonConfigSerializerBuilder;
+
+import java.nio.file.Path;
+
+public class GeneralSettings {
+    public static final Path PATH = ImmersiveStorms.getConfigDir().resolve("general.json5");
+
+    public static final ConfigClassHandler<GeneralSettings> HANDLER = ConfigClassHandler.createBuilder(GeneralSettings.class)
+            .id(ImmersiveStorms.id("general"))
+            .serializer(
+                    config -> GsonConfigSerializerBuilder.create(config)
+                            .setPath(PATH)
+                            .setJson5(true)
+                            .build()
+            )
+            .build();
+
+    private static final String GENERAL_CATEGORY = "general";
+
+    @AutoGen(category = GENERAL_CATEGORY)
+    @Translate.Name("Enable all fog changes")
+    @TickBox
+    @SerialEntry(comment = "Toggle for all fog density and color changing features")
+    boolean enableFogChanges = true;
+
+    @AutoGen(category = GENERAL_CATEGORY)
+    @Translate.Name("Enable sandstorm fog changes")
+    @TickBox
+    @SerialEntry(comment = "Toggles the fog density and color changes for sandstorms")
+    boolean enableSandstormFog = true;
+
+    @AutoGen(category = GENERAL_CATEGORY)
+    @Translate.Name("Enable blizzard fog changes")
+    @TickBox
+    @SerialEntry(comment = "Toggles the fog density and color changes for blizzards")
+    boolean enableBlizzardFog = true;
+
+    @AutoGen(category = GENERAL_CATEGORY)
+    @Translate.Name("Enable dense fog changes")
+    @TickBox
+    @SerialEntry(comment = "Toggles the fog density and color changes for dense fog (affects Pale Gardens and Swamps)")
+    boolean enableDenseFog = true;
+
+    @AutoGen(category = GENERAL_CATEGORY)
+    @Translate.Name("Enable ambient wind particles")
+    @TickBox
+    @SerialEntry(comment = "Enables ambient wind particles in windy biomes")
+    boolean enableAmbientWindParticles = true;
+
+    @AutoGen(category = GENERAL_CATEGORY)
+    @Translate.Name("Enable ambient wind sounds")
+    @TickBox
+    @SerialEntry(comment = "Enables ambient wind sounds in windy biomes, has no effect in deserts/badlands due to vanilla mechanic")
+    boolean enableAmbientWindSounds = true;
+
+    @AutoGen(category = GENERAL_CATEGORY)
+    @Translate.Name("Enable strong wind sounds")
+    @TickBox
+    @SerialEntry(comment = "Enables the strong wind sounds from sandstorms and blizzards")
+    boolean enableStrongWindSounds = true;
+
+    @AutoGen(category = GENERAL_CATEGORY)
+    @Translate.Name("Enable black rain")
+    @TickBox
+    @SerialEntry(comment = "Enables the black rain effect in biomes like the Pale Garden")
+    boolean enableBlackRain = true;
+
+    @AutoGen(category = GENERAL_CATEGORY)
+    @Translate.Name("Fog distance multiplier")
+    @FloatSlider(min = 0.1f, max = 10.0f, step = 0.1f, format = "%.2f")
+    @SerialEntry(comment = "Adjusts how close fog closes in during weather, must be positive")
+    float fogDistanceMultiplier = 1.0f;
+
+    @AutoGen(category = GENERAL_CATEGORY)
+    @Translate.Name("Wind particle chance multiplier")
+    @FloatSlider(min = 0.1f, max = 10.0f, step = 0.1f, format = "%.2f")
+    @SerialEntry(comment = "Adjusts how often ambient wind particles appear (does not affect sandstorms), must be positive")
+    float windParticleChanceMultiplier = 1.0f;
+
+    @AutoGen(category = GENERAL_CATEGORY)
+    @Translate.Name("Wind particle size")
+    @FloatSlider(min = 0.01f, max = 2.0f, step = 0.05f, format = "%.2f")
+    @SerialEntry(comment = "Multiplies the size of the ambient wind particles. Does not affect the sandstorm dust particles.")
+    float windParticleSize = 1.0f;
+
+    public boolean isFogTypeEnabled(WeatherArchetype archetype) {
+        return switch (archetype) {
+            case SANDSTORM -> this.enableSandstormFog;
+            case BLIZZARD -> this.enableBlizzardFog;
+            case SPOOKY -> this.enableDenseFog;
+            default -> true;
+        };
+    }
+
+    public boolean isEnableFogChanges() {
+        return enableFogChanges;
+    }
+
+    public boolean isEnableAmbientWindParticles() {
+        return enableAmbientWindParticles;
+    }
+
+    public boolean isEnableAmbientWindSounds() {
+        return enableAmbientWindSounds;
+    }
+
+    public boolean isEnableStrongWindSounds() {
+        return enableStrongWindSounds;
+    }
+
+    public boolean isEnableBlackRain() {
+        return enableBlackRain;
+    }
+
+    public float getFogDistanceMultiplier() {
+        return fogDistanceMultiplier;
+    }
+
+    public float getWindParticleChanceMultiplier() {
+        return windParticleChanceMultiplier;
+    }
+
+    public float windParticleSize() {
+        return windParticleSize;
+    }
+
+    @Deprecated
+    public SandstormSettings getSandstorm() {
+        return SandstormSettings.HANDLER.instance();
+    }
+}

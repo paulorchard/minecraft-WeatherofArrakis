@@ -34,20 +34,6 @@ public final class WeatherClientEvents {
 
     private WeatherClientEvents() {}
 
-    private static final boolean IS_LOADED = net.neoforged.fml.ModList.get() != null && net.neoforged.fml.ModList.get().isLoaded("immersive_storms");
-
-    /** The ported sandstorm look runs unless the real Immersive Storms is loaded (config) or the biome filter says no. */
-    static boolean sandOn() {
-        if (IS_LOADED && com.paulorchard.islandcraft.weatherofarrakis.ClientConfig.YIELD_TO_IMMERSIVE_STORMS.get()) return false;
-        if (com.paulorchard.islandcraft.weatherofarrakis.ClientConfig.SANDSTORM_BIOME_FILTER.get()) {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.level == null || mc.player == null) return false;
-            var b = mc.level.getBiome(mc.player.blockPosition());
-            if (!(b.is(net.minecraft.world.level.biome.Biomes.DESERT) || b.is(net.minecraft.tags.BiomeTags.IS_BADLANDS) || b.is(net.minecraft.tags.BiomeTags.IS_SAVANNA))) return false;
-        }
-        return true;
-    }
-
     /** Smoothed outdoor factor; updates from the camera's sky light. */
     private static float outdoorNow() {
         Minecraft mc = Minecraft.getInstance();
@@ -79,7 +65,6 @@ public final class WeatherClientEvents {
     @SubscribeEvent
     public static void fogColor(ViewportEvent.ComputeFogColor e) {
         ClientDebug.colorEvents++;
-        if (sandOn()) { ClientDebug.colorApplied++; com.paulorchard.islandcraft.weatherofarrakis.client.immersive.SandstormFog.colour(e, com.paulorchard.islandcraft.weatherofarrakis.client.immersive.StormLook.intensity() * outdoor); }
         if (!ClientWeather.isActive()) return;
         ClientWeather.Look look = ClientWeather.current();
         float k = look.horizon() * outdoor;
@@ -108,8 +93,8 @@ public final class WeatherClientEvents {
     @SubscribeEvent
     public static void fog(ViewportEvent.RenderFog e) {
         ClientDebug.fogEvents++;
+        if (e.getType() == FogType.ATMOSPHERIC) ClientDebug.fogEndSeen = e.getFogData().environmentalEnd;
         if (e.getType() != FogType.ATMOSPHERIC) return;
-        if (sandOn()) com.paulorchard.islandcraft.weatherofarrakis.client.immersive.SandstormFog.apply(e, com.paulorchard.islandcraft.weatherofarrakis.client.immersive.StormLook.intensity() * outdoor);
         if (!ClientWeather.isActive()) return;
         ClientWeather.Look look = ClientWeather.current();
         float k = outdoor;
@@ -138,11 +123,10 @@ public final class WeatherClientEvents {
         public static void layers(RegisterGuiLayersEvent e) {
             // Directly above the camera overlays (so below crosshair, hotbar and the rest of the HUD).
             e.registerAbove(VanillaGuiLayers.CAMERA_OVERLAYS, Identifier.fromNamespaceAndPath(WeatherOfArrakis.MOD_ID, "sand_overlay"), (g, delta) -> {
+                // Coriolis stages only: this overlay was never seen working (reports 02 and 03); the sandstorm now comes from the copied Immersive Storms code.
                 ClientDebug.overlayDraws++;
                 ClientWeather.Look l = ClientWeather.current();
-                // Coriolis stages: this old overlay path was never seen working and may be dead (see report 02); sandstorms use only sandstorm_overlay.
-                float sandA = sandOn() ? (float) (com.paulorchard.islandcraft.weatherofarrakis.ClientConfig.SANDSTORM_OVERLAY.get() * com.paulorchard.islandcraft.weatherofarrakis.client.immersive.StormLook.intensity()) : 0f;
-                float a = outdoorNow() * Mth.clamp(sandA + l.sky() * 0.12f + (1f - l.sun()) * 0.60f + l.overlay() * 0.25f, 0f, 0.78f);
+                float a = outdoorNow() * Mth.clamp(l.sky() * 0.12f + (1f - l.sun()) * 0.60f + l.overlay() * 0.25f, 0f, 0.78f);
                 if (a < 0.01f) return;
                 Minecraft mc = Minecraft.getInstance();
                 ClientDebug.overlayDrawn++;
@@ -177,6 +161,11 @@ public final class WeatherClientEvents {
     }
 
     @SubscribeEvent
+    public static void soundCount(net.neoforged.neoforge.client.event.sound.PlaySoundEvent e) {
+        if (e.getName() != null && e.getName().contains("weather.")) ClientDebug.soundsPlayed++;
+    }
+
+    @SubscribeEvent
     public static void logout(ClientPlayerNetworkEvent.LoggingOut e) {
         ClientWeather.reset();
         ShakeClient.clear();
@@ -193,8 +182,7 @@ public final class WeatherClientEvents {
         float out = outdoorNow();
 
         // wind bed: one looping sound whose volume follows the look; quieter indoors and underground
-        float sandVol = sandOn() ? (float) (0.55 * com.paulorchard.islandcraft.weatherofarrakis.client.immersive.StormLook.intensity() * com.paulorchard.islandcraft.weatherofarrakis.ClientConfig.SANDSTORM_WIND_VOLUME.get()) : 0f;
-        float vol = Math.max(look.wind(), sandVol) * (0.12f + 0.88f * out);
+        float vol = look.wind() * (0.12f + 0.88f * out);
         ClientDebug.outdoor = out;
         ClientDebug.windVolume = vol;
         ClientDebug.windPlaying = wind != null && !wind.isStopped();
@@ -212,9 +200,9 @@ public final class WeatherClientEvents {
             }
         }
 
-        ClientDebug.tick(ClientWeather.isActive() || com.paulorchard.islandcraft.weatherofarrakis.client.immersive.StormLook.intensity() > 0.001f);
+        ClientDebug.tick(ClientWeather.isActive() || ClientDebug.rainGradient > 0.001f);
+        ClientDebug.sample();
         StormShot.tick();
-        if (sandOn()) com.paulorchard.islandcraft.weatherofarrakis.client.immersive.SandstormParticles.tick(level, com.paulorchard.islandcraft.weatherofarrakis.client.immersive.StormLook.intensity(), out);
         // blowing sand (Coriolis stages only now), driven from the wind direction, outdoors only
         float rate = look.particles() * out;
         if (rate > 0.01f && !mc.isPaused()) {

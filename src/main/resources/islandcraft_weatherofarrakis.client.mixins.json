@@ -1,0 +1,16 @@
+{
+    "required": true,
+    "package": "com.paulorchard.islandcraft.weatherofarrakis.storms.client.mixin.client",
+    "plugin": "com.paulorchard.islandcraft.weatherofarrakis.storms.StormsMixinPlugin",
+    "compatibilityLevel": "JAVA_25",
+    "client": [
+        "AtmosphericFogEnvironmentMixin",
+        "ClientLevelMixin",
+        "ClientPacketListenerMixin",
+        "WeatherEffectRendererMixin",
+        "WeatherRenderStateMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}

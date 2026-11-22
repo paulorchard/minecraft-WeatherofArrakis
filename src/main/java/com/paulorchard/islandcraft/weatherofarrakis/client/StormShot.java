@@ -24,7 +24,7 @@ public final class StormShot {
         Minecraft mc = Minecraft.getInstance();
         long now = net.minecraft.util.Util.getMillis();
         if (AUTO != null && !autoDone && mc.level != null) {
-            boolean full = com.paulorchard.islandcraft.weatherofarrakis.client.immersive.StormLook.intensity() >= 0.99f || ClientWeather.current().fogBlocks() <= 56f;
+            boolean full = ClientDebug.rainGradient >= 0.99f;
             if (full) {
                 if (fullSince < 0) fullSince = now;
                 if (now - fullSince > 2000 && due < 0) {

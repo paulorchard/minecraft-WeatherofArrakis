@@ -1,0 +1,5 @@
+{
+  "net/minecraft/world/level/Level": ["com/paulorchard/islandcraft/weatherofarrakis/storms/world/AttributeMapHolder"],
+  "net/minecraft/server/MinecraftServer": ["com/paulorchard/islandcraft/weatherofarrakis/storms/world/AttributeMapHolder"],
+  "net/minecraft/client/multiplayer/ClientPacketListener": ["com/paulorchard/islandcraft/weatherofarrakis/storms/world/AttributeMapHolder"]
+}

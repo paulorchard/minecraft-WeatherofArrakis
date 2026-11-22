@@ -48,8 +48,6 @@ public final class ClientWeather {
     public static void apply(WeatherPayload p) {
         ClientDebug.onPayload(p, net.minecraft.client.Minecraft.getInstance().level == null ? -1 : net.minecraft.client.Minecraft.getInstance().level.getGameTime());
         Look now = current();
-        // Sandstorms are rendered by the ported renderer (client.immersive), driven only by the server's intensity; the old look stays CLEAR for them.
-        com.paulorchard.islandcraft.weatherofarrakis.client.immersive.StormLook.set(p.kind() == WeatherPayload.SANDSTORM ? p.intensity() : 0f, p.windX(), p.windZ(), p.blendSeconds());
         Look target = switch (p.kind()) {
             case WeatherPayload.SANDSTORM -> Look.CLEAR;
             case WeatherPayload.APPROACH -> STAGES[Math.max(1, Math.min(6, p.stage())) - 1];
@@ -71,7 +69,6 @@ public final class ClientWeather {
 
     public static void reset() {
         from = to = Look.CLEAR;
-        com.paulorchard.islandcraft.weatherofarrakis.client.immersive.StormLook.reset();
         durMs = 0;
         kind = 0;
         storm = false;

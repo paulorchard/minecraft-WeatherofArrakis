@@ -19,7 +19,7 @@ public final class WeatherConfig {
             .define("wind_from", "west");
 
     // ---- sandstorms (Part 2) ----
-    public static final ModConfigSpec.BooleanValue SANDSTORM_ENABLED = B.comment("Sandstorms: harmless, visual and audio only.").define("sandstorm_enabled", true);
+    public static final ModConfigSpec.BooleanValue SANDSTORM_ENABLED = B.comment("Random sandstorm scheduler (old, prompt 01). OFF since prompt 03: sandstorms now come from vanilla rain through /sandstorm start.").define("sandstorm_enabled", false);
     public static final ModConfigSpec.DoubleValue SAND_GAP_MIN = B.comment("Gap between sandstorms, real minutes (server running), minimum.").defineInRange("sandstorm_gap_minutes_min", 15.0, 0.0, 100000.0);
     public static final ModConfigSpec.DoubleValue SAND_GAP_MAX = B.comment("Gap between sandstorms, real minutes, maximum.").defineInRange("sandstorm_gap_minutes_max", 45.0, 0.0, 100000.0);
     public static final ModConfigSpec.DoubleValue SAND_DUR_MIN = B.comment("Sandstorm length, real minutes, minimum.").defineInRange("sandstorm_duration_minutes_min", 3.0, 0.05, 100000.0);

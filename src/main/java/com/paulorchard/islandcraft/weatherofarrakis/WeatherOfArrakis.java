@@ -17,12 +17,31 @@ public class WeatherOfArrakis {
     public static final String MOD_ID = "islandcraft_weatherofarrakis";
     public static final Logger LOGGER = LogUtils.getLogger();
 
+    private static boolean stormsInitDone;
+
     public WeatherOfArrakis(IEventBus modEventBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.SERVER, WeatherConfig.SPEC);
         container.registerConfig(ModConfig.Type.CLIENT, com.paulorchard.islandcraft.weatherofarrakis.ClientConfig.SPEC);
         modEventBus.addListener(RegisterPayloadHandlersEvent.class, WeatherOfArrakis::registerPayloads);
         modEventBus.addListener(net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent.class, e -> e.enqueueWork(com.paulorchard.islandcraft.weatherofarrakis.claims.ClaimProviders::init));
         NeoForge.EVENT_BUS.register(ServerEvents.class);
+        // Prompt 03: the copied Immersive Storms entrypoints (the real ones are Yumi entrypoints and two @Mod classes upstream).
+        if (net.neoforged.fml.ModList.get().isLoaded("immersive_storms")) {
+            LOGGER.info("The real Immersive Storms mod is loaded: our copy of its sandstorm registers nothing (the two cannot run together).");
+        } else {
+            boolean client = net.neoforged.fml.loading.FMLEnvironment.getDist().isClient();
+            if (client) com.paulorchard.islandcraft.weatherofarrakis.storms.StormsClientBoot.listeners(modEventBus, container);
+            // Upstream registers its particle types, sounds and environment attributes from the Yumi init entrypoint; here the built-in registries are
+            // already frozen at mod construction, so the same init runs inside the registration window (first RegisterEvent).
+            modEventBus.addListener(net.neoforged.neoforge.registries.RegisterEvent.class, e -> {
+                if (stormsInitDone) return;
+                stormsInitDone = true;
+                new com.paulorchard.islandcraft.weatherofarrakis.storms.ImmersiveStorms().onInitialize();
+                // its constructor reaches the registered attributes too (ConfigSyncPacketPayload -> AdvancedSettings), so it is built here, after the init
+                new com.paulorchard.islandcraft.weatherofarrakis.storms.neoforge.ImmersiveStormsNeo(modEventBus);
+                if (client) com.paulorchard.islandcraft.weatherofarrakis.storms.StormsClientBoot.init();
+            });
+        }
         LOGGER.info("IslandCraft - Weather of Arrakis loaded");
     }
 
