@@ -33,7 +33,7 @@ displayName="${mod_name}" #mandatory
 #logoFile="examplemod.png" #optional
 
 # A text field displayed in the mod UI
-#credits="" #optional
+credits="Sandstorm rendering adapted from Immersive Storms by TheDeathlyCow (LGPL-3.0-or-later), see NOTICE.md"
 
 # The authors of the mod, displayed in the mod UI (optional)
 authors="${mod_authors}"

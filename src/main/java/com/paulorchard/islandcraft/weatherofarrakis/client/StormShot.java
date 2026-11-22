@@ -24,7 +24,7 @@ public final class StormShot {
         Minecraft mc = Minecraft.getInstance();
         long now = net.minecraft.util.Util.getMillis();
         if (AUTO != null && !autoDone && mc.level != null) {
-            boolean full = ClientWeather.current().fogBlocks() <= 56f;
+            boolean full = com.paulorchard.islandcraft.weatherofarrakis.client.immersive.StormLook.intensity() >= 0.99f || ClientWeather.current().fogBlocks() <= 56f;
             if (full) {
                 if (fullSince < 0) fullSince = now;
                 if (now - fullSince > 2000 && due < 0) {
@@ -36,14 +36,14 @@ public final class StormShot {
         if (due > 0 && now >= due) {
             due = -1;
             wasHidden = mc.options.hideGui;
-            mc.options.hideGui = true;
+            // GUI stays visible so the overlay layer shows
             // one frame later the GUI is gone; grab on the next tick
             pendingGrab = 3;
         }
         if (pendingGrab > 0 && --pendingGrab == 0) {
             Screenshot.grab(mc.gameDirectory, name + ".png", mc.getMainRenderTarget(), 1,
                     msg -> WeatherOfArrakis.LOGGER.info("[storm-debug] screenshot: {} / {}", msg.getString(), mc.gameDirectory + "/screenshots/" + name + ".png"));
-            mc.options.hideGui = wasHidden;
+            
         }
     }
 

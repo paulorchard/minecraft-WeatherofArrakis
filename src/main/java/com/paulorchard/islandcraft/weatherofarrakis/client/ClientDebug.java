@@ -31,6 +31,7 @@ public final class ClientDebug {
         if (active) {
             WeatherOfArrakis.LOGGER.info("[storm-debug] payloads={} renderFog={} (applied {}, end={}) fogColor={} (applied {}) particles={}/s overlay drawn={} (alpha {}) wind playing={} vol={} outdoor={}",
                     payloads, fogEvents, fogApplied, fogEnd, colorEvents, colorApplied, particles, overlayDrawn, overlayAlpha, windPlaying, windVolume, outdoor);
+            WeatherOfArrakis.LOGGER.info("[storm-debug]   sandstorm look: intensity={} shaders={}", com.paulorchard.islandcraft.weatherofarrakis.client.immersive.StormLook.intensity(), com.paulorchard.islandcraft.weatherofarrakis.client.immersive.ShaderDetect.active());
         }
         particlesPerSec = particles;
         particles = 0;
