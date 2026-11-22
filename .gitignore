@@ -1,0 +1,56 @@
+### Gradle ###
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/**/build/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/**/out/
+
+.run/
+
+### Eclipse ###
+.apt_generated
+.classpath
+.eclipse/
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/**/bin/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+
+### Minecraft Modding ###
+run/
+run-server/
+!**/src/**/run/
+**/src/generated/**/.cache/
+repo/
+!**/src/**/repo/
+
+### Terrain study (prompt 02): downloaded third-party jars/zips never go in git
+docs/terrain-study/**/*.jar
+docs/terrain-study/**/*.zip
+run-server/study-downloads/
+
+### Local, not for git
+docs/inspiration/
+logs/
+
+libs/
+run-client2/
+.claude/
+run-client2/
+.claude/

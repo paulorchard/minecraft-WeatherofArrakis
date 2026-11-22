@@ -1,0 +1,19 @@
+{
+  "islandcraft_weatherofarrakis.name.coriolis": "Coriolis storm",
+  "islandcraft_weatherofarrakis.name.major": "Major Coriolis storm",
+  "islandcraft_weatherofarrakis.wind.west": "the west",
+  "islandcraft_weatherofarrakis.wind.east": "the east",
+  "islandcraft_weatherofarrakis.wind.north": "the north",
+  "islandcraft_weatherofarrakis.wind.south": "the south",
+  "islandcraft_weatherofarrakis.time.minute": "%s minute",
+  "islandcraft_weatherofarrakis.time.minutes": "%s minutes",
+  "islandcraft_weatherofarrakis.time.second": "%s second",
+  "islandcraft_weatherofarrakis.time.seconds": "%s seconds",
+  "islandcraft_weatherofarrakis.coriolis.warning.first": "A %s is approaching from %s. It arrives in %s. Find shelter.",
+  "islandcraft_weatherofarrakis.coriolis.warning": "%s in %s.",
+  "islandcraft_weatherofarrakis.coriolis.warning.final": "%s in %s. Take cover now.",
+  "islandcraft_weatherofarrakis.coriolis.arrival": "The %s is upon you.",
+  "islandcraft_weatherofarrakis.coriolis.end": "The storm has passed.",
+  "islandcraft_weatherofarrakis.coriolis.join.approach": "A %s is approaching. It arrives in %s. Find shelter.",
+  "islandcraft_weatherofarrakis.coriolis.join.storm": "The %s is upon you."
+}
