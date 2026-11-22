@@ -1,5 +1,5 @@
 # Report — Prompt 01 Weather of Arrakis: sandstorms, the Coriolis storm and the chunk reset
-Status: partly (everything is built; the server side is tested headless, every client-side part and every player-dependent step is untested)   Commit / tag: step-1 cd59816, step-2 4384388, step-3 b68b810, step-4 see `git tag`
+Status: partly (everything is built; the server side is tested headless, every client-side part and every player-dependent step is untested)   Commit / tag: step-1 cd59816, step-2 4384388, step-3 b68b810, step-4 99dad43
 
 ## What was built
 - **Project:** NeoForge 26.1.2.129 / Java 25, mod id `islandcraft_weatherofarrakis`, jar `IslandCraft-WeatherOfArrakis-0.1.0.jar`. One jar; client code is only reached from `Dist.CLIENT` subscribers and payload lambdas. Server config with every key and comment; client config for shake.
