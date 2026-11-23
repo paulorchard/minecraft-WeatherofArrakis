@@ -57,6 +57,7 @@ public final class ClientDebug {
                     com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_SPEED.get(), com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_SPEED_THUNDER.get(),
                     mc.level == null ? 0 : StormSpeed.factor(mc.level), com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_DENSITY.get(), com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_SIZE.get(),
                     com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_FRICTION.get(), com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_LIFETIME_SCALE.get(), StormSpeed.report());
+            WeatherOfArrakis.LOGGER.info("[storm-debug] {} gustsPlayed={}", StormWindBed.report(), com.paulorchard.islandcraft.weatherofarrakis.storms.client.world.SandstormSounds.gustsPlayed);
         }
         particlesPerSec = particles;
         particles = 0;

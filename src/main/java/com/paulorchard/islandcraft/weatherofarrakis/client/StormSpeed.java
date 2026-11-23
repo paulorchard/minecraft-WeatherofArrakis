@@ -18,8 +18,8 @@ public final class StormSpeed {
 
     /** Multiplier on the original velocity (-1 block per tick): setting x thunder lerp x rain strength. */
     public static float factor(ClientLevel level) {
-        float rain = level.getRainLevel(1f);
-        float thunder = level.getThunderLevel(1f);
+        float rain = StormInput.rain(level, 1f);
+        float thunder = StormInput.thunder(level, 1f);
         float strength = Mth.lerp(Mth.clamp((rain - 0.2f) / 0.8f, 0f, 1f), 0.4f, 1f);
         float thunderFactor = Mth.lerp(thunder, 1f, StormsClientConfig.PARTICLE_SPEED_THUNDER.get().floatValue());
         return StormsClientConfig.PARTICLE_SPEED.get().floatValue() * thunderFactor * strength;

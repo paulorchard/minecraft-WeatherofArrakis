@@ -28,6 +28,23 @@ public final class StormsClientConfig {
     public static final ModConfigSpec.DoubleValue PARTICLE_FRICTION = d("sandstorm_particle_friction", 0.96, 0.80, 1.0,
             "Velocity kept per tick (upstream 0.96: grains slow to a crawl after 2 s). 1.0 = constant wind speed.");
 
+    static {
+        B.pop();
+        B.push("wind");
+    }
+    public static final ModConfigSpec.BooleanValue WIND_BED_ENABLED = b("wind_bed_enabled", true, "Continuous wind loop that follows the storm strength.");
+    public static final ModConfigSpec.ConfigValue<String> WIND_BED_SOUND = s("wind_bed_sound", "islandcraft_weatherofarrakis:weather.bed_roar", "Sound event id of the main wind loop. Try /storm_sound <id> first. Alternatives: islandcraft_weatherofarrakis:weather.bed_howl, minecraft:item.elytra.flying, minecraft:ambient.warped_forest.loop.");
+    public static final ModConfigSpec.DoubleValue WIND_BED_VOLUME = d("wind_bed_volume", 1.0, 0.0, 2.0, "Volume of the wind loop at full storm (the game caps a sound at 1.0 after the sound sliders).");
+    public static final ModConfigSpec.DoubleValue WIND_BED_PITCH = d("wind_bed_pitch", 1.0, 0.5, 2.0, "Pitch of the wind loop (lower = deeper). It also falls a little in thunder and indoors.");
+    public static final ModConfigSpec.ConfigValue<String> WIND_HISS_SOUND = s("wind_hiss_sound", "islandcraft_weatherofarrakis:weather.bed_hiss", "Second layer (blown sand hiss). Empty = no second layer.");
+    public static final ModConfigSpec.DoubleValue WIND_HISS_VOLUME = d("wind_hiss_volume", 0.45, 0.0, 2.0, "Volume of the second layer at full storm.");
+    public static final ModConfigSpec.DoubleValue WIND_INDOOR_VOLUME = d("wind_indoor_volume", 0.12, 0.0, 1.0, "Share of the wind volume that stays indoors and in caves (the pitch also drops).");
+    public static final ModConfigSpec.BooleanValue WIND_GUST_ENABLED = b("wind_gust_enabled", true, "One-shot gusts around the player (the copied Immersive Storms gust code).");
+    public static final ModConfigSpec.ConfigValue<String> WIND_GUST_SOUND = s("wind_gust_sound", "islandcraft_weatherofarrakis:weather.gust", "Sound event id of one gust. Empty = the biome sound of the copied code (the Pixabay strong wind files).");
+    public static final ModConfigSpec.DoubleValue WIND_GUST_RATE = d("wind_gust_rate", 0.8, 0.0, 10.0, "Gusts per second at full storm; it falls with the storm strength (a fifth at the weakest).");
+    public static final ModConfigSpec.DoubleValue WIND_GUST_VOLUME = d("wind_gust_volume", 1.0, 0.0, 2.0, "Volume of a gust at full storm.");
+    public static final ModConfigSpec.DoubleValue WIND_GUST_PITCH = d("wind_gust_pitch", 0.9, 0.5, 2.0, "Pitch of a gust (each gust varies by about 15 percent).");
+
     public static final ModConfigSpec SPEC;
 
     static {
@@ -36,6 +53,18 @@ public final class StormsClientConfig {
     }
 
     private StormsClientConfig() {}
+
+    private static ModConfigSpec.BooleanValue b(String name, boolean def, String comment) {
+        ModConfigSpec.BooleanValue v = B.comment(comment).define(name, def);
+        TUNABLE.put(name, v);
+        return v;
+    }
+
+    private static ModConfigSpec.ConfigValue<String> s(String name, String def, String comment) {
+        ModConfigSpec.ConfigValue<String> v = B.comment(comment).define(name, def);
+        TUNABLE.put(name, v);
+        return v;
+    }
 
     private static ModConfigSpec.DoubleValue d(String name, double def, double min, double max, String comment) {
         ModConfigSpec.DoubleValue v = B.comment(comment).defineInRange(name, def, min, max);

@@ -17,5 +17,9 @@
             "islandcraft_weatherofarrakis:weather/wind/soft6"
         ],
         "subtitle": "subtitles.islandcraft_weatherofarrakis.weather.soft_wind"
-    }
+    },
+    "weather.bed_roar": { "sounds": [ "islandcraft_weatherofarrakis:weather/generated/gen_roar" ] },
+    "weather.bed_howl": { "sounds": [ "islandcraft_weatherofarrakis:weather/generated/gen_howl" ] },
+    "weather.bed_hiss": { "sounds": [ "islandcraft_weatherofarrakis:weather/generated/gen_hiss" ] },
+    "weather.gust": { "sounds": [ "islandcraft_weatherofarrakis:weather/generated/gen_gust1", "islandcraft_weatherofarrakis:weather/generated/gen_gust2", "islandcraft_weatherofarrakis:weather/generated/gen_gust3" ] }
 }

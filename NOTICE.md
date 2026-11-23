@@ -162,8 +162,11 @@ Prompt 03's "verbatim" rule ended with prompt 04. The upstream code at commit 66
 | `storms/config/section/SandstormSettings.java` | `getSandstormParticleDensityMultiplier()` and `dustParticleSize()` read `StormsClientConfig` | the settings are now live and editable (weatherofarrakis-storms-client.toml, /storm_tune) |
 | `storms/client/world/SandstormParticles.java` | the velocity passed to `addParticle` is `PARTICLE_VELOCITY * StormSpeed.factor(level)` instead of the constant | speed is a setting scaled by rain and thunder strength |
 | `storms/client/particle/DustGrainParticle.java` | friction and lifetime come from the config; a `tick()` override reports measured grain speed to `StormSpeed` | settings, and the measurement for the debug log |
+| `storms/client/world/SandstormSounds.java` | gust gate, timer, volume, pitch and sound come from the client settings `wind_gust_*`, strength (StormInput) and the outdoor factor; counter `gustsPlayed` | hurricane gusts, tunable; the bed is our own class (`client/StormWindBed`) |
 
 ## Sounds added in prompt 04 (licence status)
 
 - `tools/audition/generated/gen_roar.ogg`, `gen_howl.ogg`, `gen_hiss.ogg`: generated from noise by `tools/audition/node/build.mjs`. Ours, no third-party terms.
 - Vanilla sounds are only ever referenced by event id; their audio is extracted into the gitignored `tools/audition/vanilla/` for listening and is never committed or shipped.
+- `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/weather/generated/*.ogg` (copies of the generated files above): shipped, ours, default wind bed, hiss layer and gusts.
+- The Pixabay files (`sounds/weather/wind/*`, `sounds/weather/sandstorm/*`) are still in the jar but are no longer played by default (the gust sound default is generated; they play only if `wind_gust_sound` is set empty). RELEASE BLOCKER stays until they are deleted (delete both folders and the two events in `sounds.json`).
