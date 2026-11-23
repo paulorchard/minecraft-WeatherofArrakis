@@ -75,8 +75,7 @@ neoForge {
             // Separate from the client's run/ so both can run at once without sharing logs.
             gameDirectory = project.file('run-server')
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-            // Dev only (prompt 05): -Pselftest=marker|reset1|reset2 runs the headless self-test; -Pfakeclaim="x,z;x,z" registers a fake claim provider.
-            if (project.hasProperty('selftest')) jvmArguments.add('-Dislandcraft.weather.selftest=' + project.property('selftest'))
+            // Dev only (prompt 05): -Pfakeclaim="x,z;x,z" registers a fake claim provider.
             if (project.hasProperty('fakeclaim')) jvmArguments.add('-Dislandcraft.weather.fakeProtected=' + project.property('fakeclaim'))
         }
 

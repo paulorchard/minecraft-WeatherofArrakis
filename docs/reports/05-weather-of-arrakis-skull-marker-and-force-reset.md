@@ -6,7 +6,7 @@ Status: done (both parts built and tested headless and with a real player in the
 - **Part 2, forced reset (tag step-12).**
   - `coriolis reset force here [radius 0-4] [ignoreclaims]`, `coriolis reset force all [ignoreclaims] [confirm]`, `coriolis reset test here`, `coriolis help` (lists all four reset forms plus the test command). All at permission level 2. `reset all` and `reset here` are unchanged.
   - `server/ForceReset.java` (the async run), `server/ForceCommands.java` (the commands). `core/ChunkRecords` got a force sequence (`forceSeq`, `forceLedger`, `playerForce`, saved with optional codec fields, so old saves load).
-  - Dev tools: `server/SelfTest.java` (headless self-test, only with `-Pselftest=...`, never active in play), `-Pfakeclaim="x,z;..."` (the existing fake claim provider), the client autocmd word `respawn`, an access transformer line for `ServerChunkCache.ticketStorage` (used only for the failure text).
+  - Dev tools: `-Pfakeclaim="x,z;..."` (the existing fake claim provider), the client autocmd word `respawn`, an access transformer line for `ServerChunkCache.ticketStorage` (used only for the failure text). The headless `SelfTest` used for the tests below was removed afterwards (commit after step-12); it can be recovered from tag step-12.
 
 ## Confirmed
 (tested = run in a world, with log lines; read = from the jar)
@@ -68,7 +68,7 @@ Status: done (both parts built and tested headless and with a real player in the
 - Every `force here` moves the caller far, which makes the game generate the far spot (a few chunks); it is quick on flat terrain and will take longer on a natural world.
 - `reset force all` from a player covers the player's own dimension; from the console every configured dimension, as asked.
 - I removed the config key `bone_block`; an old config file simply ignores it (the test server's file still shows it until regenerated).
-- Dev-only code added to the jar: `SelfTest` (inactive without the system property). Remove it before a public release if you prefer; nothing else refers to it besides one `if` in `ServerEvents`.
+- The headless `SelfTest` used for the tests was removed from the code after step-12; it is still in tag step-12.
 - No new library or dependency.
 
 ## How the owner can see it
@@ -85,7 +85,6 @@ Needs a client (not claimed): how the reset chunks look while they reload, how t
 ## Suggested next steps (your view)
 - Decide whether a forced reset on a natural world should reload the area around the player with a short loading screen (it already does through the teleport); if the 15 s timeout is too long, make it a setting.
 - If exact regeneration matters, the reset could also re-run the generator for the neighbours' border feature spill; vanilla does not give a deterministic result, so I would accept the difference.
-- Remove `SelfTest` or move it into a gametest source set before a public release.
 - Delete the leftover Pixabay sound files (still pending from report 04).
 - A configuration key for the unload margin (`HOLD_MARGIN`, 15) if a server uses a very large view distance.
 

@@ -76,7 +76,6 @@ public final class ServerEvents {
         Records.tickVisits(e.getServer());
         MajorStorm.tick(e.getServer());
         ForceReset.tickAll(e.getServer());
-        if (SelfTest.enabled()) SelfTest.tick(e.getServer());
     }
 
     @SubscribeEvent
