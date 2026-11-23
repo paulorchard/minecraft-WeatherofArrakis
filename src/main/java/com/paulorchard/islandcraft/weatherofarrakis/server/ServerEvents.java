@@ -75,11 +75,14 @@ public final class ServerEvents {
     public static void serverTick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post e) {
         Records.tickVisits(e.getServer());
         MajorStorm.tick(e.getServer());
+        ForceReset.tickAll(e.getServer());
+        if (SelfTest.enabled()) SelfTest.tick(e.getServer());
     }
 
     @SubscribeEvent
     public static void stopping(net.neoforged.neoforge.event.server.ServerStoppingEvent e) {
         MajorStorm.onServerStopping(e.getServer());
+        ForceReset.abortAll();
     }
 
     @SubscribeEvent

@@ -40,6 +40,8 @@ public class WeatherData extends SavedData {
 
     private static final Codec<Long> LONG_KEY = Codec.STRING.xmap(Long::parseLong, l -> Long.toString(l));
     private static final Codec<Map<String, Map<Long, Integer>>> CHUNK_MAP = Codec.unboundedMap(Codec.STRING, Codec.unboundedMap(LONG_KEY, Codec.INT));
+    private static final Codec<Map<String, Map<Long, Long>>> FORCE_MAP = Codec.unboundedMap(Codec.STRING, Codec.unboundedMap(LONG_KEY, Codec.LONG));
+    private static final Codec<Map<UUID, Long>> PLAYER_FORCE_MAP = Codec.unboundedMap(Codec.STRING.xmap(UUID::fromString, UUID::toString), Codec.LONG);
     private static final Codec<Map<UUID, Integer>> PLAYER_MAP = Codec.unboundedMap(Codec.STRING.xmap(UUID::fromString, UUID::toString), Codec.INT);
 
     public static final Codec<WeatherData> CODEC = RecordCodecBuilder.create(i -> i.group(
@@ -47,7 +49,10 @@ public class WeatherData extends SavedData {
             Codec.INT.optionalFieldOf("major_counter", 0).forGetter(d -> d.records.counter),
             CHUNK_MAP.optionalFieldOf("altered_chunks", Map.of()).forGetter(d -> d.records.altered),
             CHUNK_MAP.optionalFieldOf("reset_ledger", Map.of()).forGetter(d -> d.records.ledger),
-            PLAYER_MAP.optionalFieldOf("player_records", Map.of()).forGetter(d -> d.records.players)
+            PLAYER_MAP.optionalFieldOf("player_records", Map.of()).forGetter(d -> d.records.players),
+            Codec.LONG.optionalFieldOf("force_seq", 0L).forGetter(d -> d.records.forceSeq),
+            FORCE_MAP.optionalFieldOf("force_ledger", Map.of()).forGetter(d -> d.records.forceLedger),
+            PLAYER_FORCE_MAP.optionalFieldOf("player_force", Map.of()).forGetter(d -> d.records.playerForce)
     ).apply(i, WeatherData::new));
 
     public static final SavedDataType<WeatherData> TYPE = new SavedDataType<>(
@@ -58,7 +63,10 @@ public class WeatherData extends SavedData {
 
     public WeatherData() {}
 
-    private WeatherData(Map<String, LevelWeather> loaded, int counter, Map<String, Map<Long, Integer>> altered, Map<String, Map<Long, Integer>> ledger, Map<UUID, Integer> players) {
+    private WeatherData(Map<String, LevelWeather> loaded, int counter, Map<String, Map<Long, Integer>> altered, Map<String, Map<Long, Integer>> ledger, Map<UUID, Integer> players, long forceSeq, Map<String, Map<Long, Long>> forceLedger, Map<UUID, Long> playerForce) {
+        this.records.forceSeq = forceSeq;
+        forceLedger.forEach((k, v) -> this.records.forceLedger.put(k, new HashMap<>(v)));
+        this.records.playerForce.putAll(playerForce);
         this.levels.putAll(loaded);
         this.records.counter = counter;
         altered.forEach((k, v) -> this.records.altered.put(k, new HashMap<>(v)));

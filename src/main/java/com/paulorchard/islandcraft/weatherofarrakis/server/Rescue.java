@@ -39,6 +39,7 @@ public final class Rescue {
             rescue(level, p, reset ? "chunk was reset" : "body inside solid blocks");
         } else if (!rec.players.containsKey(p.getUUID())) {
             rec.players.put(p.getUUID(), rec.counter);
+            rec.playerForce.put(p.getUUID(), rec.forceSeq);
             data.setDirty();
         }
     }

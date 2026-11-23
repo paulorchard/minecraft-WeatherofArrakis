@@ -65,4 +65,31 @@ class ChunkRecordsTest {
         assertFalse(r.resetAfterLogout(D, 1L, u));
         assertFalse(r.resetAfterLogout(D, 99L, u));
     }
+
+    @Test
+    void forcedResetLeavesTheCounterAloneButStillRescues() {
+        ChunkRecords r = new ChunkRecords();
+        UUID u = UUID.randomUUID();
+        r.counter = 2;
+        r.players.put(u, 2);
+        r.playerForce.put(u, r.forceSeq);
+        r.markAltered(D, 1L);
+        r.completeForceReset(D, 1L);
+        assertEquals(2, r.counter);
+        assertFalse(r.isAltered(D, 1L));
+        assertEquals(2, r.ledgerValue(D, 1L));
+        assertTrue(r.resetAfterLogout(D, 1L, u), "a player who logged out before the forced reset is rescued although the counter is the same");
+        r.playerForce.put(u, r.forceSeq); // logs out again after the reset
+        assertFalse(r.resetAfterLogout(D, 1L, u));
+        r.completeForceReset(D, 1L);
+        assertTrue(r.resetAfterLogout(D, 1L, u), "a second forced reset counts again");
+    }
+
+    @Test
+    void forcedResetOfAnUnrecordedChunkIsStillWrittenToTheLedger() {
+        ChunkRecords r = new ChunkRecords();
+        r.completeForceReset(D, 7L);
+        assertNotNull(r.ledgerValue(D, 7L));
+        assertEquals(1L, r.forceLedgerValue(D, 7L));
+    }
 }

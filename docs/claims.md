@@ -17,7 +17,7 @@ Register with `ClaimProviders.register(provider)` (built-in ids `ftbchunks` and 
 Rules:
 - No provider, nothing protected.
 - Fail closed: if a provider throws, the chunk counts as protected and the error is logged once. If a claim mod is installed but its adapter cannot be built, every chunk counts as protected.
-- Protected chunks are skipped by the Major pass, by `coriolis reset all` and by `coriolis reset here`.
+- Protected chunks are skipped by the Major pass, by `coriolis reset all` and by `coriolis reset here`, and by the test commands `coriolis reset force here|all` unless `ignoreclaims` is added (the reply lists the skipped chunks with the claim provider that protects them).
 
 ## Adapters
 

@@ -67,7 +67,8 @@ public final class StormShot {
             if ((net.minecraft.util.Util.getMillis() - cmdStart) / 1000.0 < at) return;
             String cmd = items[cmdNext].substring(colon + 1).trim();
             WeatherOfArrakis.LOGGER.info("[storm-debug] autocmd: {}", cmd);
-            mc.player.connection.sendCommand(cmd);
+            if (cmd.equals("respawn")) mc.player.respawn(); // dev only: leave the death screen
+            else mc.player.connection.sendCommand(cmd);
             cmdNext++;
         }
     }

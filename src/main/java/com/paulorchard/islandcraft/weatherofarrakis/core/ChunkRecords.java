@@ -15,10 +15,14 @@ public final class ChunkRecords {
     public final Map<String, Map<Long, Integer>> altered = new HashMap<>();
     public final Map<String, Map<Long, Integer>> ledger = new HashMap<>();
     public final Map<UUID, Integer> players = new HashMap<>();
+    /** Prompt 05: forced resets do not move the Major counter, so they have their own sequence: forceSeq counts them, forceLedger holds the sequence of the last forced reset of a chunk, playerForce the sequence a player had when logging out. */
+    public long forceSeq;
+    public final Map<String, Map<Long, Long>> forceLedger = new HashMap<>();
+    public final Map<UUID, Long> playerForce = new HashMap<>();
 
     public record Candidate(String dimension, long chunk, int lastVisit) {}
 
-    /** A placed or broken block (or a bone marker): the chunk enters the record, last visit = now. */
+    /** A placed or broken block (or a death marker): the chunk enters the record, last visit = now. */
     public void markAltered(String dim, long chunk) {
         altered.computeIfAbsent(dim, k -> new HashMap<>()).put(chunk, counter);
     }
@@ -71,6 +75,17 @@ public final class ChunkRecords {
         ledger.computeIfAbsent(dim, k -> new HashMap<>()).put(chunk, counter);
     }
 
+    /** A forced reset (test command): same bookkeeping, but the Major counter is untouched; the rescue rule uses the force sequence instead. */
+    public void completeForceReset(String dim, long chunk) {
+        completeReset(dim, chunk);
+        forceLedger.computeIfAbsent(dim, k -> new HashMap<>()).put(chunk, ++forceSeq);
+    }
+
+    public Long forceLedgerValue(String dim, long chunk) {
+        Map<Long, Long> m = forceLedger.get(dim);
+        return m == null ? null : m.get(chunk);
+    }
+
     public Integer ledgerValue(String dim, long chunk) {
         Map<Long, Integer> m = ledger.get(dim);
         return m == null ? null : m.get(chunk);
@@ -80,6 +95,8 @@ public final class ChunkRecords {
     public boolean resetAfterLogout(String dim, long chunk, UUID player) {
         Integer l = ledgerValue(dim, chunk);
         Integer p = players.get(player);
-        return l != null && p != null && l > p;
+        if (l != null && p != null && l > p) return true;
+        Long f = forceLedgerValue(dim, chunk);
+        return f != null && p != null && f > playerForce.getOrDefault(player, 0L);
     }
 }

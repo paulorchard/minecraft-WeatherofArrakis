@@ -79,6 +79,7 @@ public final class Records {
         if (MajorStorm.isRefusingLogins()) return;
         WeatherData data = WeatherData.get(p.level().getServer());
         data.records.players.put(p.getUUID(), data.records.counter);
+        data.records.playerForce.put(p.getUUID(), data.records.forceSeq);
         data.setDirty();
     }
 }
