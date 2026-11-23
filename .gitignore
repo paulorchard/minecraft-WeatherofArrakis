@@ -54,3 +54,7 @@ run-client2/
 .claude/
 run-client2/
 .claude/
+
+# prompt 04 audition tool: vanilla extracts (never committed) and node packages
+tools/audition/vanilla/
+tools/audition/node/node_modules/

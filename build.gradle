@@ -56,6 +56,7 @@ neoForge {
         client {
             client()
             if (project.hasProperty('quickplay')) programArguments.addAll('--quickPlayMultiplayer', project.property('quickplay'))
+            if (project.hasProperty('autocmd')) jvmArguments.add('-Dislandcraft.weather.autocmd=' + project.property('autocmd'))
             if (project.hasProperty('autoshot')) jvmArguments.add('-Dislandcraft.weather.autoshot=' + project.property('autoshot'))
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id

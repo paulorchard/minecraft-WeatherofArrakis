@@ -21,6 +21,7 @@ public final class StormShot {
     }
 
     public static void tick() {
+        runAutoCommands();
         Minecraft mc = Minecraft.getInstance();
         long now = net.minecraft.util.Util.getMillis();
         if (AUTO != null && !autoDone && mc.level != null) {
@@ -48,4 +49,26 @@ public final class StormShot {
     }
 
     private static int pendingGrab;
+
+    /** Dev only: -Pautocmd="5:storm_sound foo;20:storm_sound stop" runs client or server commands N seconds after the player is in the world. */
+    private static final String AUTOCMD = System.getProperty("islandcraft.weather.autocmd");
+    private static long cmdStart = -1;
+    private static int cmdNext;
+
+    public static void runAutoCommands() {
+        if (AUTOCMD == null) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null || mc.player == null) { cmdStart = -1; cmdNext = 0; return; }
+        if (cmdStart < 0) cmdStart = net.minecraft.util.Util.getMillis();
+        String[] items = AUTOCMD.split(";");
+        while (cmdNext < items.length) {
+            int colon = items[cmdNext].indexOf(':');
+            double at = Double.parseDouble(items[cmdNext].substring(0, colon));
+            if ((net.minecraft.util.Util.getMillis() - cmdStart) / 1000.0 < at) return;
+            String cmd = items[cmdNext].substring(colon + 1).trim();
+            WeatherOfArrakis.LOGGER.info("[storm-debug] autocmd: {}", cmd);
+            mc.player.connection.sendCommand(cmd);
+            cmdNext++;
+        }
+    }
 }
