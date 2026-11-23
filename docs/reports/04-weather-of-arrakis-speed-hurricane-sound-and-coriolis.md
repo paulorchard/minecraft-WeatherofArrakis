@@ -1,5 +1,5 @@
 # Report — Prompt 04 Weather of Arrakis: speed, hurricane sound and the Coriolis storm
-Status: done (all three parts built and proven by logs and screenshots in the dev client; nothing was heard, and the shader-pack Coriolis storm shows dust and sound only)   Commit / tag: step-7 6380974, step-8, step-9 c544e03, step-10 HASH
+Status: done (all three parts built and proven by logs and screenshots in the dev client; nothing was heard, and the shader-pack Coriolis storm shows dust and sound only)   Commit / tag: step-7 6380974, step-8, step-9 c544e03, step-10 503492c
 
 ## What was built
 - **Part 1, speed (tag step-7).** New client config `weatherofarrakis-storms-client.toml` (NeoForge `ModConfigSpec`, reloads when the file changes): `sandstorm_particle_speed` 6.0 (0.1 to 40), `sandstorm_particle_speed_thunder_multiplier` 2.0, `sandstorm_particle_density`, `sandstorm_particle_size` 1.0, `sandstorm_particle_lifetime_scale`, `sandstorm_particle_friction`. The in-memory `SandstormSettings` density and size getters now read it. Speed = original velocity x setting x lerp(1, thunder multiplier, thunder gradient) x a strength factor (0.4 at the weakest, 1 at full) at the one place the velocity is used. `/storm_tune` lists the settings and `/storm_tune name value` changes one live and writes the file (tab-completes names).
