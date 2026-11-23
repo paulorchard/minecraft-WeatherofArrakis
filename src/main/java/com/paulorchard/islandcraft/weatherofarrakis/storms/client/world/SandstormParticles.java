@@ -51,6 +51,8 @@ public final class SandstormParticles implements ISClientTickEvents.EndLevel {
         final int cameraY = cameraPos.getY();
         final int xOffset = renderDistance / 2;
 
+        // IslandCraft change (prompt 04): the velocity was the constant PARTICLE_VELOCITY; it is now a setting scaled by storm strength.
+        final float velocity = PARTICLE_VELOCITY * com.paulorchard.islandcraft.weatherofarrakis.client.StormSpeed.factor(level);
         for (int x = cameraPos.getX() - renderDistance; x < cameraPos.getX() + renderDistance; x++) {
             for (int z = cameraPos.getZ() - renderDistance; z < cameraPos.getZ() + renderDistance; z++) {
                 // adjust to account for the fact that particles travel along the x-axis
@@ -61,12 +63,12 @@ public final class SandstormParticles implements ISClientTickEvents.EndLevel {
                 y = Math.max(y, level.getHeight(Heightmap.Types.MOTION_BLOCKING, adjustedX, z));
 
                 pos.set(adjustedX, y, z);
-                addParticle(level, particle, pos, rarity);
+                addParticle(level, particle, pos, rarity, velocity);
             }
         }
     }
 
-    private static void addParticle(ClientLevel level, ParticleOptions particle, BlockPos pos, float rarity) {
+    private static void addParticle(ClientLevel level, ParticleOptions particle, BlockPos pos, float rarity, float velocity) {
         Holder<Biome> biome = level.getBiomeManager().getNoiseBiomeAtPosition(pos);
 
         RandomSource random = level.getRandom();
@@ -81,7 +83,7 @@ public final class SandstormParticles implements ISClientTickEvents.EndLevel {
                     pos.getX() + random.nextDouble(),
                     pos.getY() + random.nextDouble(),
                     pos.getZ() + random.nextDouble(),
-                    PARTICLE_VELOCITY, 0, 0
+                    velocity, 0, 0
             );
         }
     }

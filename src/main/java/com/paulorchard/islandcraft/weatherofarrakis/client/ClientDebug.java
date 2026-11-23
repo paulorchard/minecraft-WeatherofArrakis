@@ -53,6 +53,10 @@ public final class ClientDebug {
             }
             if (!net.neoforged.fml.ModList.get().isLoaded("immersive_storms")) WeatherOfArrakis.LOGGER.info("[storm-debug] copied Immersive Storms: rain={} thunder={} archetype={} fogEnd(after mixin)={} particleEngine={} weatherSoundsPlayed(total)={} | ours: payloads={} renderFog={} outdoor={}",
                     rainGradient, thunderGradient, archetype, fogEndSeen, dustParticles, soundsPlayed, payloads, fogEvents, outdoor);
+            WeatherOfArrakis.LOGGER.info("[storm-debug] dust: speedSetting={} thunderMult={} factorNow={} density={} size={} friction={} lifetimeScale={} | {}",
+                    com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_SPEED.get(), com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_SPEED_THUNDER.get(),
+                    mc.level == null ? 0 : StormSpeed.factor(mc.level), com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_DENSITY.get(), com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_SIZE.get(),
+                    com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_FRICTION.get(), com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_LIFETIME_SCALE.get(), StormSpeed.report());
         }
         particlesPerSec = particles;
         particles = 0;

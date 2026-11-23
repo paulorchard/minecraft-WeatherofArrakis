@@ -22,6 +22,7 @@ public class WeatherOfArrakis {
     public WeatherOfArrakis(IEventBus modEventBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.SERVER, WeatherConfig.SPEC);
         container.registerConfig(ModConfig.Type.CLIENT, com.paulorchard.islandcraft.weatherofarrakis.ClientConfig.SPEC);
+        container.registerConfig(ModConfig.Type.CLIENT, StormsClientConfig.SPEC, StormsClientConfig.FILE);
         modEventBus.addListener(RegisterPayloadHandlersEvent.class, WeatherOfArrakis::registerPayloads);
         modEventBus.addListener(net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent.class, e -> e.enqueueWork(com.paulorchard.islandcraft.weatherofarrakis.claims.ClaimProviders::init));
         NeoForge.EVENT_BUS.register(ServerEvents.class);

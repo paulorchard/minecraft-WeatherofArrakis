@@ -67,15 +67,16 @@ public class SandstormSettings {
         return detectParticleRain;
     }
 
+    // IslandCraft change (prompt 04): density and size read the live client config instead of the in-memory field.
     public int getSandstormParticleRenderDistance() {
         return sandstormParticleRenderDistance;
     }
 
     public float getSandstormParticleDensityMultiplier() {
-        return sandstormParticleDensityMultiplier;
+        return (float) (double) com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_DENSITY.get();
     }
 
     public float dustParticleSize() {
-        return dustParticleSize;
+        return (float) (double) com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_SIZE.get();
     }
 }

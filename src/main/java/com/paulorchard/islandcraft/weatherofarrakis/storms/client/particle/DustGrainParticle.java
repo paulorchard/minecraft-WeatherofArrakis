@@ -23,11 +23,22 @@ public class DustGrainParticle extends DustParticleBase<DustGrainParticleEffect>
         this.yd = velocityY;
         this.zd = velocityZ;
         this.gravity = 1e-1f;
+        // IslandCraft change (prompt 04): friction and lifetime are settings; the measurement hooks are in StormSpeed.
+        this.friction = (float) (double) com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_FRICTION.get();
+        this.lifetime = Math.max(1, (int) (this.lifetime * com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_LIFETIME_SCALE.get()));
 
         float multiplier = this.random.nextFloat() * 0.4F + 0.6F;
         this.rCol = this.randomizeColor(parameters.getColor().x(), multiplier);
         this.gCol = this.randomizeColor(parameters.getColor().y(), multiplier);
         this.bCol = this.randomizeColor(parameters.getColor().z(), multiplier);
+    }
+
+    // IslandCraft change (prompt 04): measurement of real grain speed for the debug log.
+    @Override
+    public void tick() {
+        double px = this.x, pz = this.z;
+        super.tick();
+        com.paulorchard.islandcraft.weatherofarrakis.client.StormSpeed.sample(this.age, this.x - px, this.z - pz, this.x, this.y, this.z);
     }
 
     public static class Provider implements ParticleProvider<DustGrainParticleEffect> {

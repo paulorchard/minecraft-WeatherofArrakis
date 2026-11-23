@@ -152,3 +152,13 @@ Also copied and edited (rules above): `META-INF/accesstransformer.cfg` lines, `l
 ## Replacing the adapted code with a newer upstream copy
 
 The copied code is the package `com.paulorchard.islandcraft.weatherofarrakis.storms` (minus `shim`, `StormsClientBoot`, `StormsMixinPlugin`), the resources listed above, and the two mixin configs. To update or modify it: copy the new upstream `src/main` and `src/neoforge` Java and resources over those paths, repeat the package and namespace renames (rules 1 and 2), re-apply the small edits listed under rule 3 (imports, entrypoints, `@Mod` removal), keep the plugin line in the mixin configs, and rebuild with `./gradlew build`. The rest of the mod calls only `ImmersiveStorms.onInitialize()`, `ImmersiveStormsNeo`, `ImmersiveStormsNeoClientMod`, `ImmersiveStormsClient.onInitializeClient()` and reads a few registries in the debug log, so it is unaffected.
+
+## Modifications after prompt 03 (prompt 04 on; each is a small block marked `IslandCraft change` in the file)
+
+Prompt 03's "verbatim" rule ended with prompt 04. The upstream code at commit 66c883b is otherwise as copied.
+
+| File | Change | Reason |
+|---|---|---|
+| `storms/config/section/SandstormSettings.java` | `getSandstormParticleDensityMultiplier()` and `dustParticleSize()` read `StormsClientConfig` | the settings are now live and editable (weatherofarrakis-storms-client.toml, /storm_tune) |
+| `storms/client/world/SandstormParticles.java` | the velocity passed to `addParticle` is `PARTICLE_VELOCITY * StormSpeed.factor(level)` instead of the constant | speed is a setting scaled by rain and thunder strength |
+| `storms/client/particle/DustGrainParticle.java` | friction and lifetime come from the config; a `tick()` override reports measured grain speed to `StormSpeed` | settings, and the measurement for the debug log |
