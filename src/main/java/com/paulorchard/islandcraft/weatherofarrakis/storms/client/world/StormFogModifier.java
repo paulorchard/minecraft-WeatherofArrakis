@@ -35,7 +35,8 @@ public final class StormFogModifier {
         }
 
         float stormFogDistanceMultiplier = camera.attributeProbe().getValue(ISEnvironmentAttributes.STORM_FOG_END_DISTANCE, partialTicks);
-        float reduction = stormFogDistanceMultiplier * config.getFogDistanceMultiplier();
+        // IslandCraft change (prompt 04): the Coriolis storm multiplies the fog distance down further (1.0 outside it)
+        float reduction = stormFogDistanceMultiplier * config.getFogDistanceMultiplier() * com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.coriolisFogFactor();
         float fogEnd = fog.environmentalEnd * reduction;
 
         if (reduction < 1.0f) {

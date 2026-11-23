@@ -22,7 +22,15 @@ public final class StormSpeed {
         float thunder = StormInput.thunder(level, 1f);
         float strength = Mth.lerp(Mth.clamp((rain - 0.2f) / 0.8f, 0f, 1f), 0.4f, 1f);
         float thunderFactor = Mth.lerp(thunder, 1f, StormsClientConfig.PARTICLE_SPEED_THUNDER.get().floatValue());
-        return StormsClientConfig.PARTICLE_SPEED.get().floatValue() * thunderFactor * strength;
+        float coriolis = Mth.lerp(com.paulorchard.islandcraft.weatherofarrakis.StormOverride.extra, 1f, StormsClientConfig.CORIOLIS_STORM_SPEED.get().floatValue());
+        return StormsClientConfig.PARTICLE_SPEED.get().floatValue() * thunderFactor * strength * coriolis;
+    }
+
+    /** Spawn-rate factor: 0.3 at the weakest strength, 1 at full (so a full sandstorm is unchanged), times the Coriolis density factor in the storm. */
+    public static float density(ClientLevel level) {
+        float rain = StormInput.rain(level, 1f);
+        float strength = Mth.lerp(Mth.clamp((rain - 0.2f) / 0.8f, 0f, 1f), 0.3f, 1f);
+        return strength * Mth.lerp(com.paulorchard.islandcraft.weatherofarrakis.StormOverride.extra, 1f, StormsClientConfig.CORIOLIS_STORM_DENSITY.get().floatValue());
     }
 
     /** Called from DustGrainParticle.tick after the move. dx, dz are the blocks moved this tick. */

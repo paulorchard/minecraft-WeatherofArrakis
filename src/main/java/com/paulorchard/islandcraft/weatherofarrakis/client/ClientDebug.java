@@ -18,6 +18,9 @@ public final class ClientDebug {
     public static String archetype = "?", dustParticles = "?";
     public static String note = "";
 
+    /** Dev only (-Pstageshots=name): a screenshot name_stageN / name_storm half a second after each Coriolis blend finishes. */
+    private static final String STAGE_SHOTS = System.getProperty("islandcraft.weather.stageshots");
+
     private static int ticks;
 
     private ClientDebug() {}
@@ -26,6 +29,9 @@ public final class ClientDebug {
         payloads++;
         last = p;
         lastGameTime = gameTime;
+        if (STAGE_SHOTS != null && (p.kind() == WeatherPayload.APPROACH || p.kind() == WeatherPayload.STORM)) {
+            StormShot.request(STAGE_SHOTS + (p.kind() == WeatherPayload.STORM ? "_storm" : "_stage" + p.stage()), p.blendSeconds() + 0.5f);
+        }
         WeatherOfArrakis.LOGGER.info("[storm-debug] payload received: kind={} stage={} intensity={} wind=({},{}) blend={}s major={}", p.kind(), p.stage(), p.intensity(), p.windX(), p.windZ(), p.blendSeconds(), p.major());
     }
 
@@ -33,8 +39,24 @@ public final class ClientDebug {
     public static void sample() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return;
-        rainGradient = mc.level.getRainLevel(1f);
-        thunderGradient = mc.level.getThunderLevel(1f);
+        rainGradient = StormInput.rain(mc.level, 1f);
+        thunderGradient = StormInput.thunder(mc.level, 1f);
+    }
+
+    private static String skyLightFactor(Minecraft mc) {
+        try {
+            return String.format(java.util.Locale.ROOT, "%.3f", mc.gameRenderer.getMainCamera().attributeProbe().getValue(net.minecraft.world.attribute.EnvironmentAttributes.SKY_LIGHT_FACTOR, 1f));
+        } catch (RuntimeException e) {
+            return "?";
+        }
+    }
+
+    private static String skyColor(Minecraft mc) {
+        try {
+            return String.format("%06X", mc.gameRenderer.getMainCamera().attributeProbe().getValue(net.minecraft.world.attribute.EnvironmentAttributes.SKY_COLOR, 1f) & 0xFFFFFF);
+        } catch (RuntimeException e) {
+            return "?";
+        }
     }
 
     /** Once per second while a weather is active (called every client tick). */
@@ -57,6 +79,8 @@ public final class ClientDebug {
                     com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_SPEED.get(), com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_SPEED_THUNDER.get(),
                     mc.level == null ? 0 : StormSpeed.factor(mc.level), com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_DENSITY.get(), com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_SIZE.get(),
                     com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_FRICTION.get(), com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig.PARTICLE_LIFETIME_SCALE.get(), StormSpeed.report());
+            var eff = ClientWeather.current();
+            WeatherOfArrakis.LOGGER.info("[storm-debug] coriolis: kind={} stage={} effRain={} effThunder={} extra={} skyLightFactor={} skyColor={} | no old fog/overlay/particles/wind code runs", ClientWeather.kind(), ClientWeather.stage(), eff.rain(), eff.thunder(), eff.extra(), skyLightFactor(mc), skyColor(mc));
             WeatherOfArrakis.LOGGER.info("[storm-debug] {} gustsPlayed={}", StormWindBed.report(), com.paulorchard.islandcraft.weatherofarrakis.storms.client.world.SandstormSounds.gustsPlayed);
         }
         particlesPerSec = particles;

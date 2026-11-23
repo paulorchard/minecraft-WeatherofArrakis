@@ -26,7 +26,8 @@ public final class SandstormParticles implements ISClientTickEvents.EndLevel {
 
     @Override
     public void onEndTick(ClientLevel level) {
-        if (!level.isRaining() || level.tickRateManager().isFrozen()) {
+        // IslandCraft change (prompt 04): original: if (!level.isRaining() ...); the gradient can now come from the Coriolis override
+        if (!(com.paulorchard.islandcraft.weatherofarrakis.client.StormInput.rain(level, 1f) > 0.2f) || level.tickRateManager().isFrozen()) {
             return;
         }
 
@@ -47,7 +48,7 @@ public final class SandstormParticles implements ISClientTickEvents.EndLevel {
         final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         final float particleSize = PARTICLE_SCALE * settings.dustParticleSize();
         final ParticleOptions particle = new DustGrainParticleEffect(COLOR, particleSize);
-        final float rarity = BASE_PARTICLE_CHANCE * settings.getSandstormParticleDensityMultiplier();
+        final float rarity = BASE_PARTICLE_CHANCE * settings.getSandstormParticleDensityMultiplier() * com.paulorchard.islandcraft.weatherofarrakis.client.StormSpeed.density(level); // IslandCraft change (prompt 04): strength and Coriolis density factor
         final int cameraY = cameraPos.getY();
         final int xOffset = renderDistance / 2;
 

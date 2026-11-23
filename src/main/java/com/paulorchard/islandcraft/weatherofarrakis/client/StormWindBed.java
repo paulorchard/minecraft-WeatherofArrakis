@@ -66,7 +66,7 @@ public final class StormWindBed {
 
         float io = Mth.lerp(outdoor, StormsClientConfig.WIND_INDOOR_VOLUME.get().floatValue(), 1f);
         float pitchIndoor = Mth.lerp(outdoor, 0.8f, 1f);
-        float basePitch = StormsClientConfig.WIND_BED_PITCH.get().floatValue() * (1f - 0.15f * thunder) * pitchIndoor;
+        float basePitch = StormsClientConfig.WIND_BED_PITCH.get().floatValue() * (1f - 0.15f * thunder - 0.05f * com.paulorchard.islandcraft.weatherofarrakis.StormOverride.extra) * pitchIndoor;
 
         bedVolume = Mth.clamp(StormsClientConfig.WIND_BED_VOLUME.get().floatValue() * intensity * io, 0f, 1f);
         bedPitch = basePitch;

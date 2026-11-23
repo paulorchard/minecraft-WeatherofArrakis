@@ -1,20 +1,21 @@
 package com.paulorchard.islandcraft.weatherofarrakis.client;
 
+import com.paulorchard.islandcraft.weatherofarrakis.StormOverride;
+import com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig;
 import com.paulorchard.islandcraft.weatherofarrakis.net.WeatherPayload;
 
 /**
- * What the client was told, and the look it blends to. Free of client-only classes so the network handler can reference it anywhere.
- * Values are fractions "from a clear day (0) to the storm palette (1)", except fogBlocks (distance) and sun (1 = full sunlight).
+ * What the client was told, and the effective strength it blends to. Prompt 04: the Coriolis stages and the storm are expressed as an effective rain and thunder
+ * gradient (plus an "extra" factor for the storm itself) that the copied Immersive Storms sandstorm effects read through StormOverride; the old staged fog, overlay,
+ * particles and wind of prompt 01 are gone. Free of client-only classes so the network handler can reference it anywhere.
  */
 public final class ClientWeather {
-    /** One look. */
-    public record Look(float sky, float horizon, float sun, float fogBlocks, float particles, float overlay, float wind) {
-        public static final float NO_FOG = 400f;
-        public static final Look CLEAR = new Look(0, 0, 1, NO_FOG, 0, 0, 0);
+    /** Effective strength: rain and thunder like vanilla gradients (0..1), extra = 0 in the approach, 1 in the storm itself. */
+    public record Eff(float rain, float thunder, float extra) {
+        public static final Eff CLEAR = new Eff(0, 0, 0);
 
-        static Look lerp(Look a, Look b, float t) {
-            return new Look(l(a.sky, b.sky, t), l(a.horizon, b.horizon, t), l(a.sun, b.sun, t), l(a.fogBlocks, b.fogBlocks, t),
-                    l(a.particles, b.particles, t), l(a.overlay, b.overlay, t), l(a.wind, b.wind, t));
+        static Eff lerp(Eff a, Eff b, float t) {
+            return new Eff(l(a.rain, b.rain, t), l(a.thunder, b.thunder, t), l(a.extra, b.extra, t));
         }
 
         private static float l(float a, float b, float t) {
@@ -22,43 +23,47 @@ public final class ClientWeather {
         }
     }
 
-    /** Hytale's calibration for the six approach stages, adapted. Index 0 = stage 1 (5:00) .. 5 = stage 6 (0:30). */
-    private static final Look[] STAGES = {
-            new Look(0.05f, 0.35f, 1.00f, 150f, 0.00f, 0.00f, 0.10f),
-            new Look(0.25f, 0.55f, 1.00f, 120f, 0.00f, 0.00f, 0.25f),
-            new Look(0.50f, 0.75f, 0.95f, 90f, 0.00f, 0.00f, 0.40f),
-            new Look(0.75f, 0.90f, 0.90f, 60f, 0.00f, 0.00f, 0.55f),
-            new Look(1.00f, 1.00f, 0.75f, 38f, 0.35f, 0.00f, 0.70f),
-            new Look(1.00f, 1.00f, 0.55f, 28f, 0.55f, 0.40f, 0.85f),
-    };
-    public static final Look STORM = new Look(1f, 1f, 0.20f, 20f, 1f, 1f, 1f);
-
-    private static Look from = Look.CLEAR;
-    private static Look to = Look.CLEAR;
+    private static Eff from = Eff.CLEAR;
+    private static Eff to = Eff.CLEAR;
     private static long startMs;
     private static long durMs;
     private static boolean storm;
     private static boolean major;
     private static float windX = 1f, windZ = 0f;
-    private static int kind;
+    private static int kind, stage;
     private static boolean tremble, front;
 
     private ClientWeather() {}
 
+    /** Approach stage 1..6 to an effective strength, read from the client config when the payload arrives (so /storm_tune works live). */
+    private static Eff stageEff(int stage) {
+        float rain = switch (Math.max(1, Math.min(6, stage))) {
+            case 1 -> StormsClientConfig.CORIOLIS_RAIN_1.get().floatValue();
+            case 2 -> StormsClientConfig.CORIOLIS_RAIN_2.get().floatValue();
+            case 3 -> StormsClientConfig.CORIOLIS_RAIN_3.get().floatValue();
+            case 4 -> StormsClientConfig.CORIOLIS_RAIN_4.get().floatValue();
+            case 5 -> StormsClientConfig.CORIOLIS_RAIN_5.get().floatValue();
+            default -> StormsClientConfig.CORIOLIS_RAIN_6.get().floatValue();
+        };
+        float thunder = stage == 5 ? StormsClientConfig.CORIOLIS_THUNDER_5.get().floatValue() : stage >= 6 ? StormsClientConfig.CORIOLIS_THUNDER_6.get().floatValue() : 0f;
+        return new Eff(rain, thunder, 0f);
+    }
+
     public static void apply(WeatherPayload p) {
         ClientDebug.onPayload(p, net.minecraft.client.Minecraft.getInstance().level == null ? -1 : net.minecraft.client.Minecraft.getInstance().level.getGameTime());
-        Look now = current();
-        Look target = switch (p.kind()) {
-            case WeatherPayload.SANDSTORM -> Look.CLEAR;
-            case WeatherPayload.APPROACH -> STAGES[Math.max(1, Math.min(6, p.stage())) - 1];
-            case WeatherPayload.STORM -> STORM;
-            default -> Look.CLEAR;
+        Eff now = current();
+        Eff target = switch (p.kind()) {
+            case WeatherPayload.APPROACH -> stageEff(p.stage());
+            case WeatherPayload.STORM -> new Eff(1f, 1f, 1f);
+            default -> Eff.CLEAR;
         };
+        if (!StormsClientConfig.CORIOLIS_LOOK_ENABLED.get()) target = Eff.CLEAR;
         from = now;
         to = target;
         startMs = net.minecraft.util.Util.getMillis();
         durMs = (long) (p.blendSeconds() * 1000);
         kind = p.kind();
+        stage = p.stage();
         storm = p.kind() == WeatherPayload.STORM;
         major = p.major();
         tremble = p.tremble();
@@ -68,23 +73,33 @@ public final class ClientWeather {
     }
 
     public static void reset() {
-        from = to = Look.CLEAR;
+        from = to = Eff.CLEAR;
         durMs = 0;
         kind = 0;
+        stage = 0;
         storm = false;
+        StormOverride.clear();
     }
 
-    public static Look current() {
+    public static Eff current() {
         if (durMs <= 0) return to;
         float t = (net.minecraft.util.Util.getMillis() - startMs) / (float) durMs;
         if (t >= 1f) return to;
         t = t * t * (3 - 2 * t); // smoothstep
-        return Look.lerp(from, to, t);
+        return Eff.lerp(from, to, t);
+    }
+
+    /** Called every client tick: publishes the blended strength to the copied sandstorm effects. */
+    public static void pushOverride() {
+        Eff e = current();
+        StormOverride.rain = e.rain();
+        StormOverride.thunder = e.thunder();
+        StormOverride.extra = e.extra();
     }
 
     public static boolean isActive() {
-        Look l = current();
-        return l.horizon > 0.001f || l.wind > 0.001f || l.sky > 0.001f || to != Look.CLEAR;
+        Eff e = current();
+        return e.rain > 0.001f || to != Eff.CLEAR;
     }
 
     public static boolean isStorm() { return storm; }
@@ -92,6 +107,7 @@ public final class ClientWeather {
     public static boolean tremble() { return tremble; }
     public static boolean front() { return front; }
     public static int kind() { return kind; }
+    public static int stage() { return stage; }
     public static float windX() { return windX; }
     public static float windZ() { return windZ; }
 }

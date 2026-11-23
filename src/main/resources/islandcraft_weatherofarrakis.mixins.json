@@ -8,7 +8,8 @@
         "EnvironmentAttributeSystemMixin",
         "LevelMixin",
         "MinecraftServerMixin",
-        "ServerLevelMixin"
+        "ServerLevelMixin",
+        "StormWeatherAccessMixin"
     ],
     "injectors": {
         "defaultRequire": 1

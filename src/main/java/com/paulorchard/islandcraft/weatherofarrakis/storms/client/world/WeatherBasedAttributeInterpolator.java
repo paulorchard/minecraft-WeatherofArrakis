@@ -73,8 +73,9 @@ public final class WeatherBasedAttributeInterpolator {
             return result;
         }
 
-        final float thunderLevel = level.getThunderLevel(partialTicks);
-        final float rainLevel = level.getRainLevel(partialTicks);
+        // IslandCraft change (prompt 04): the Coriolis override can raise the gradients (original: level.getThunderLevel / getRainLevel)
+        final float thunderLevel = com.paulorchard.islandcraft.weatherofarrakis.client.StormInput.thunder(level, partialTicks);
+        final float rainLevel = com.paulorchard.islandcraft.weatherofarrakis.client.StormInput.rain(level, partialTicks);
 
         if (rainLevel > 0f) {
             result = this.rainProbe.apply(attribute, rainLevel, partialTicks, result);

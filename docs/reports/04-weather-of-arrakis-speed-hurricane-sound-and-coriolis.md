@@ -1,0 +1,92 @@
+# Report — Prompt 04 Weather of Arrakis: speed, hurricane sound and the Coriolis storm
+Status: done (all three parts built and proven by logs and screenshots in the dev client; nothing was heard, and the shader-pack Coriolis storm shows dust and sound only)   Commit / tag: step-7 6380974, step-8, step-9 c544e03, step-10 HASH
+
+## What was built
+- **Part 1, speed (tag step-7).** New client config `weatherofarrakis-storms-client.toml` (NeoForge `ModConfigSpec`, reloads when the file changes): `sandstorm_particle_speed` 6.0 (0.1 to 40), `sandstorm_particle_speed_thunder_multiplier` 2.0, `sandstorm_particle_density`, `sandstorm_particle_size` 1.0, `sandstorm_particle_lifetime_scale`, `sandstorm_particle_friction`. The in-memory `SandstormSettings` density and size getters now read it. Speed = original velocity x setting x lerp(1, thunder multiplier, thunder gradient) x a strength factor (0.4 at the weakest, 1 at full) at the one place the velocity is used. `/storm_tune` lists the settings and `/storm_tune name value` changes one live and writes the file (tab-completes names).
+- **Part 2a, candidates (tag step-8).** `tools/audition/index.html` (self-contained, relative paths): 106 candidates with players, loop box, pitch slider (0.5 to 1.5), layer-with, licence label, objective table and a notes column. Built by `tools/audition/node/build.mjs` (Node; npm packages `@wasm-audio-decoders/ogg-vorbis` and `vorbis-encoder-js`, dev tools only, `node_modules` gitignored; no ffmpeg on this machine). Three generated wind beds and three generated gusts are committed as `.ogg`. `/storm_sound <id> [pitch] [volume] [loop]` and `/storm_sound stop` play any sound event in the world (weather category, not positional). Dev option `-Pautocmd="seconds:command;..."` runs commands in the dev client.
+- **Part 2b, hurricane (tag step-9).** `client/StormWindBed`: two looping head-relative instances (`weather.bed_roar` low roar, `weather.bed_hiss` sand hiss) in the WEATHER category (the game's weather slider applies), volume and pitch following rain and thunder strength and an outdoor factor from sky light (about 1 s transition). Starts and stops with the storm. The copied one-shot gusts keep their code but use the settings `wind_gust_*` (rate, volume, pitch, sound), louder and more frequent with strength, sound default the generated `weather.gust`. Settings: `wind_bed_enabled`, `wind_bed_sound`, `wind_bed_volume`, `wind_bed_pitch`, `wind_hiss_sound`, `wind_hiss_volume`, `wind_indoor_volume`, `wind_gust_enabled`, `wind_gust_sound`, `wind_gust_rate`, `wind_gust_volume`, `wind_gust_pitch`.
+- **Part 3, Coriolis (tag step-10).** Route (b): the payload (kind, stage, blend seconds) becomes an effective rain and thunder gradient plus an "extra" factor (`ClientWeather.Eff`), blended with the payload's blend seconds and published each tick in `StormOverride`. The copied sandstorm effects read it (read sites below). Stage mapping and the storm extras are in the config (`coriolis_rain_1..6`, `coriolis_thunder_5/6`, `coriolis_storm_fog_multiplier` 0.4, `_density_multiplier` 2, `_speed_multiplier` 1.5, `_warm_cast` 0.35, `coriolis_look_enabled`). The old Coriolis client look is removed. `/sandstorm start` and `/coriolis start` refuse while the other runs.
+- Dev tools added: `-Pautocmd`, `-Pstageshots=name` (a screenshot after each Coriolis stage blend), `/storm_debug shot [name]`, per-second log lines for dust (speed setting and measured speed), wind and coriolis state.
+
+## Confirmed
+(tested in the dev client with logs and screenshots unless marked "read")
+- Clean build and `./gradlew test` pass. The dedicated server starts with the jar (about 0.3 s), runs `/sandstorm start`, `/coriolis start` and the refusals; no client class loads there.
+- **Grain physics (read from the jar, then measured):** a dust grain moves by its velocity every tick and keeps 0.96 of it per tick (`DustParticleBase.friction`); the copied code spawns it at -1 block per tick. Measured in the log: original value = **19.8 blocks/s at spawn, 6.4 after 1 s, 1.9 after 2 s** (it travels about 25 blocks in total). New default (speed 6, rain): **119 / 37 / 10 blocks/s** at 0.05 s / 1 s / 2 s. Speed 20: 391 / 155 / 68. Thunder at speed 6 (factor 12): 237 / 70 / 24.
+- Grains in view: speed 1, density 1: about 1130 within 20 blocks. Speed 6, density 1: about 145 (the grains cross the radius 6 times faster, so it looks empty). Speed 20: about 45. Speed 6 with density 3: 323; with density 6 (the new default): 630, with about 3050 particles in the engine and 3200 spawned per second.
+- Clipping and tunnelling: `Particle.move` sweeps the whole step with `Entity.collideBoundingBox` (read from the jar), so a grain cannot jump through a block at any speed. Counted: grains that had not moved after 3 ticks were 0 to 9 of about 3000 per second at speeds 1, 6, 20 (grains that hit the ground), no particle was culled (born per second matched the spawn rate). Streaks: the grain is a point sprite drawn between its last and current position, with no stretch, so at 20 blocks per tick it shows as a flicker, not a streak; I could not judge frame-rate behaviour by eye.
+- Screenshots `docs/screenshots/speed-6.png`, `speed-20.png`, `speed-6-thunder.png`, `speed-6-iris-photon.png`. A still frame cannot show speed; it shows grain count and the look. Speed 20 shows far fewer grains at density 1 (screenshot taken at the old default of 3 for the 6 and 20 pair; the 6 image was retaken at density 6).
+- `/storm_sound` plays minecraft and our own events (log: `result=STARTED active=true`, file name) and refuses an unknown event; `/storm_sound stop` stopped 3 loops; `/storm_tune` listed, set (9.5) and saved the value to the toml.
+- Audition page: every file path resolves (0 of 106 missing), the page script parses, vanilla extracts are gitignored. The page was not opened in a browser (no browser tool used), so playing it is unconfirmed.
+- Bed (log, 1 s samples, `/sandstorm start 4 thunder`): starts with the storm (`wind loop started`), volume follows intensity 0.23, 0.57, 1.00 over the ramp; at full thunder volume 1.00, pitch 0.85, hiss 0.45; underground (outdoor factor 0.00) volume 0.12, pitch 0.68, hiss 0.01; back on the surface 0.29 then 0.99 within about 3 s; a trip to the Nether stopped both loops and they started again on return (dimension change survived); after `/sandstorm stop` the volume fell with the rain gradient and both loops were stopped (`wind loop stopped`), none left playing. Gusts: about 0.7 per second at full thunder.
+- Coriolis (`/coriolis start 60 30`, logs per second): payloads stage 1 to 6 every 12 s (6 s for 5 and 6), storm, clear. Effective gradients (end of blend): stage 1 rain 0.10; 2 0.25; 3 0.40; 4 0.60; 5 0.80 with thunder 0.30; 6 1.00 with thunder 0.70; storm 1.0 / 1.0 / extra 1.0. Fog end (client, after the mixin): stage 1 about 930, 2 about 800, 3 about 665, 4 about 490, 5 about 220, 6 about 80, **storm 25.6 blocks**; the sandstorm with thunder is 56. Particles in the engine: about 10 (stage 1) to 1000 (stage 2), 2000 (4), 3200 (6), 6100 (storm). Speed factor 6.3 (stage 5), 12 (stage 6 and thunder), 18 in the storm (grains 360 blocks/s at spawn). Wind bed volume 0.25 at stage 3, 0.91 at storm start, 1.00 with pitch 0.80 in the storm. Sky light factor (attribute) 1.00, 0.94, 0.86, 0.73 (stage 6), **0.60 in the storm**; the log shows no old fog, overlay, particle or wind code running.
+- Screenshots (no shaders): `coriolis-stage1.png` (almost a clear day, by design), `coriolis-stage3.png` (grey sky, dust, the chat warning), `coriolis-stage6.png` (orange-brown wall, sun gone, grains), `coriolis-storm.png` (very dark brown, near-black fog, few visible grains).
+- Refusals: `/coriolis start` while rain is on answers "A sandstorm (vanilla rain) is running: /sandstorm stop first"; `/sandstorm start` during a Coriolis phase answers "A Coriolis storm is active here (APPROACH): /coriolis stop first".
+- Coriolis gameplay code: `git diff` shows no change under `server/` or `core/` except `WeatherCommands.java` (+8 lines for the refusals, and the earlier sandstorm start) and `WeatherManager.startSandstorm`. The exposure and damage values were not re-run.
+- The real Immersive Storms still wins: our mixin plugin applies none of the mixins, including the new one (earlier test; not re-run with the new mixin).
+
+## Inferred
+- How anything sounds. The defaults rest on the numbers: roar centroid 102 Hz, RMS -14 dBFS, level steadiness 1.7 dB, a 12 s loop with a level seam of 0.7 dB; the hiss centroid 7 kHz. I judge a loud (volume 1.0), low (pitch 0.85) constant roar with a sand hiss and swelling gusts to be the closest to a hurricane of what is available; the owner has to confirm by ear.
+- That the in-game pause and the sound sliders behave: the loops are normal weather-category instances, so the game pauses them and scales them; not checked.
+- Frame-rate behaviour of very fast grains.
+- Hytale's "80 percent light loss": see below.
+
+## Answers to the prompt's questions
+- **Speed scale:** the original constant is 20 blocks per second at spawn, falling 4 percent per tick (6.4 after 1 s, 1.9 after 2 s). The tail is why it looked slow.
+- **Did density or size need changing at high speed?** Yes density: default raised from 1.0 to **6.0**, and lifetime scale **0.3** (grains cross the 20-block radius in under a second, so living 5 to 20 s was waste). Size is unchanged (1.0). Friction is a new setting at the original 0.96; `1.0` gives a constant wind speed (try 0.99 with speed 1.5 for a steady 30 blocks per second).
+- **Route:** (b), as preferred. Feasible because the copied code reads gradients in few places. Read sites changed: (1) `StormWeatherAccessMixin` (our new mixin) on `WeatherAttributes$WeatherAccess$1.rainLevel/thunderLevel`, which feeds vanilla's own weather layers (sky and fog colour, sky light) and the copied biome layers `Biome2WeatherAttributeMapView`; (2) `WeatherBasedAttributeInterpolator.apply` (two lines); (3) `SandstormParticles` (`isRaining` gate); (4) `AtmosphericFogEnvironmentMixin` (the gate `rainFogMultiplier > 0`, which vanilla only sets from real rain; this one was missed at first and left the fog at 1024 blocks through the whole Coriolis until found in the log); (5) `StormFogModifier` (extra storm fog factor). `SandstormSounds`, `StormSpeed` and `StormWindBed` read our `StormInput` helper (max of vanilla and override). Route (a) was not used: the vanilla gradient cannot hold six partial stages, sleeping and `/weather clear` end it.
+- **Sky and light:** the copied sandstorm entry only multiplies sky and fog colour (0xFF9C21) and sets fog distance; it does not darken. Vanilla's own weather layers darken the sky light factor (attribute `SKY_LIGHT_FACTOR`) from 1.0 to 0.60 at full thunder, and because of the new mixin the override gets that for free (log above): 40 percent light loss, not Hytale's 80. The copied code could go further without a hack by adding a `SKY_LIGHT_FACTOR` modifier to the thunder layer of the sandstorm entry in `AdvancedSettings` (the environment-attribute route exists), but that entry is shared with the plain thunder sandstorm in every biome, so I left it and say so. No overlay was brought back.
+- **Removed from the old Coriolis look:** the staged fog (RenderFog override), the tint overlay GUI layer, the blowing-sand particles, `WindLoop`, the old `Look` stage table. **Kept:** camera shake (`shake_*` settings), the storm front tint (still behind the server switch `storm_front`), the lightning visuals (server side, untouched), and the warm fog cast of the storm itself (`coriolis_storm_warm_cast`).
+- **Does the storm look clearly worse than the sandstorm?** In numbers yes: fog 25.6 against 56, dust 2 times denser and 1.5 times faster, sky light 0.60 against about 0.86 (rain only), deeper pitch; in the screenshot the storm is near-black brown against the orange of the sandstorm.
+
+## Numbers
+- Grain speed (blocks/s at 0.05 s / 1 s / 2 s): original 19.8 / 6.4 / 1.9; default 119 / 37 / 10; speed 20 391 / 155 / 68; thunder 237 / 70 / 24; Coriolis storm 360 / 124 / 51.
+- Grains within 20 blocks: 1130 (original), 145 (speed 6, density 1), 630 (new defaults). Particle engine: about 3050 at a sandstorm, 6100 in the Coriolis storm.
+- Fog end (blocks): sandstorm rain 112, thunder 56, Coriolis stage 3 about 665, stage 6 about 80, storm 25.6.
+- Sound table, top 10 as a bed (score/gust score, from `tools/audition/results.json`):
+
+| Bed score | Candidate | Licence | Dur s | RMS dB | Centroid Hz | Steady (std dB) |
+|---|---|---|---|---|---|---|
+| 62 | Generated roar | ours | 12 | -14.4 | 102 | 1.67 |
+| 51 | vanilla item.elytra.flying #1 | Mojang (id only) | 10.2 | -29.5 | 634 | 1.50 |
+| 40 | Generated howl | ours | 12 | -16.3 | 1119 | 2.67 |
+| 38 | vanilla ambient.warped_forest.loop | Mojang (id only) | 48.9 | -43.3 | 173 | 1.21 |
+| 37 | vanilla ambient.soul_sand_valley.loop | Mojang (id only) | 37.5 | -49.6 | 632 | 1.13 |
+| 29 | Generated hiss | ours | 12 | -16.5 | 7102 | 1.98 |
+| 26 | upstream wind/strong2 | Pixabay (blocker) | 5.6 | -13.8 | 246 | 3.44 |
+| 24 | upstream wind/strong3 | Pixabay (blocker) | 6.2 | -14.2 | 237 | 3.71 |
+| 22 | upstream wind/strong1 | Pixabay (blocker) | 5.9 | -14.3 | 232 | 3.81 |
+| 20 | vanilla ambient.underwater.loop | Mojang (id only) | 27.4 | -45.1 | 281 | 1.31 |
+
+- Top gusts: generated gust 3 (95), gust 1 (90), gust 2 (89), vanilla entity.breeze.wind_burst #3 (86) and #1 (85), entity.wind_charge.wind_burst #3 (85), ambient.cave #13 (80), ender_dragon.flap #3 (77); the Pixabay strong files score 56 to 59.
+- The vanilla loops are very quiet (-43 to -50 dBFS) and the game caps a sound at volume 1.0, so they cannot carry a loud storm; that is why they rank low as a bed.
+
+## Surprises, problems, deviations from the prompt
+- **Fog missing in the first Coriolis run** (gate `rainFogMultiplier`, fixed, see above). Only found because the log line `fogEnd(after mixin)` stayed at 1024.
+- **Shader packs:** with Iris + Photon the Coriolis storm shows clear blue sky and clouds with the dust (`coriolis-storm-iris-photon.png`); the sandstorm (real rain) shows the pack's own tinted sky (`speed-6-iris-photon.png`). The pack takes the sky and rain look from the game's vanilla rain gradient, which the override does not touch, so under shaders the Coriolis shows dust and sound only. A fix would set the client level's own rain gradient (or drive vanilla rain from the server, route (a)); I did not do it. Fog is ignored by the pack as before.
+- **Stage 5 screenshot** was not taken (its blend finishes after stage 6 begins); 1, 2, 3, 4, 6 and the storm were.
+- Density default is 6.0, not the 1.0 the prompt asked for, and a lifetime scale (0.3) and a friction setting were added; reasons in the answers.
+- A new mixin (`StormWeatherAccessMixin`, on a vanilla anonymous class) and five small blocks in copied files; NOTICE.md lists them.
+- npm packages (dev tools only, in `tools/audition/node`): `@wasm-audio-decoders/ogg-vorbis` and `vorbis-encoder-js` (the latter needs a browser-style AudioBuffer object; a stub is used in Node). Not part of the jar.
+- Muffling: the game offers no low-pass for a sound instance, so indoors the bed gets lower volume and pitch, not a real muffle.
+- `-Pautocmd` stalls if its string has an empty item.
+- The Pixabay files stay in the jar (release blocker) but nothing plays them by default; deleting `sounds/weather/wind` and `sounds/weather/sandstorm` and the two events in `sounds.json` removes the blocker.
+- The sandstorm scheduler stays off. The Coriolis gameplay code was not changed.
+
+## How the owner can see it
+Seed: any, superflat desert is easiest. The jar is in `ArrakisTest01/mods` (copy the rebuilt jar there; the dev copy is in `build/libs`). Open `tools/audition/index.html` (double-click; it uses audio elements so it works from disk). The vanilla rows need the extracts from `node build.mjs` run once in `tools/audition/node` after `npm install`; on this machine they exist.
+One run, small window, no shaders first:
+1. Open `tools/audition/index.html`, sort by Bed score, listen to the generated roar, howl, hiss and gusts, the vanilla elytra and warped-forest loops, and the Pixabay strong files; note favourites.
+2. `/sandstorm start 1 thunder`: is the sand fast enough? `/storm_tune sandstorm_particle_speed 4`, then `10`, then `20`. If the grains still look sparse, `/storm_tune sandstorm_particle_density 8`. For a steady wind try `/storm_tune sandstorm_particle_friction 0.99` with speed 1.5.
+3. Hurricane: is the wind a hurricane? Try `/storm_sound islandcraft_weatherofarrakis:weather.bed_roar 0.85 1 true` and then `/storm_sound stop`; then swap the bed with `/storm_tune wind_bed_sound <id>`: `islandcraft_weatherofarrakis:weather.bed_howl`, `minecraft:item.elytra.flying` (try `wind_bed_pitch 0.6`), `minecraft:ambient.warped_forest.loop`, `islandcraft_weatherofarrakis:weather.strong_wind` (Pixabay). Walk into a house and a cave and back. `wind_gust_rate`, `wind_gust_volume`, `wind_bed_volume`, `wind_indoor_volume` are tunable too.
+4. `/coriolis start 90 40`: watch the approach over the six stages, the storm (is it clearly worse than the sandstorm?), then the all-clear. Stage strengths: `/storm_tune coriolis_rain_3 0.5` (takes effect from the next stage).
+5. Repeat 2 to 4 with your shader pack; expect dust and sound only for the Coriolis.
+6. `/storm_debug` and `/storm_debug shot name` for numbers and a screenshot.
+
+## Suggested next steps (your view)
+- Listen first: decide the bed, the gust sound and the speed default. Then delete the Pixabay folders if the generated sounds are good enough.
+- Under shaders, make the Coriolis visible by also raising the client level's own rain gradient (a client-only setter), or use route (a) with shader packs.
+- If the storm should be darker, add a `SKY_LIGHT_FACTOR` modifier to the thunder layer of the sandstorm entry (about 0.33 for 80 percent light loss), and decide whether plain thunder sandstorms should darken too.
+- Retune the stage fog: stages 1 to 3 hardly fog (930, 800, 665 blocks) because the effect is linear in the gradient; raise `coriolis_rain_1..3` or add a fog-only factor if you want fog earlier.
+- Make a one-line config of the 'extra' storm look for servers (so the dedicated server's settings, not each client's, control it).
+
+## Owner observations (human)

@@ -90,6 +90,10 @@ public final class WeatherCommands {
 
     private static int start(CommandSourceStack src, int approach, int storm) {
         ServerLevel level = src.getLevel();
+        if (level.getServer().overworld().getWeatherData().isRaining() || level.getWeatherData().isRaining()) {
+            src.sendFailure(text("A sandstorm (vanilla rain) is running: /sandstorm stop first. A Coriolis storm and a sandstorm do not run together."));
+            return 0;
+        }
         int stormSeconds = storm > 0 ? storm : WeatherConfig.STORM_SECONDS_MIN.get() + level.getRandom().nextInt(Math.max(1, WeatherConfig.STORM_SECONDS_MAX.get() - WeatherConfig.STORM_SECONDS_MIN.get() + 1));
         if (!WeatherManager.startCoriolis(level, approach, stormSeconds)) {
             src.sendFailure(text(WeatherConfig.isQualifying(level) ? "A Coriolis storm is already running here." : "This dimension is not in the weather dimensions list."));
@@ -116,6 +120,10 @@ public final class WeatherCommands {
 
     private static int sandStart(CommandSourceStack src, int minutes, boolean thunder) {
         var level = src.getLevel();
+        if (WeatherConfig.isQualifying(level) && WeatherManager.state(level).phase != com.paulorchard.islandcraft.weatherofarrakis.core.Phase.CALM) {
+            src.sendFailure(text("A Coriolis storm is active here (" + WeatherManager.state(level).phase + "): /coriolis stop first. A sandstorm and a Coriolis storm do not run together."));
+            return 0;
+        }
         if (!WeatherManager.startSandstorm(level, minutes, thunder)) {
             src.sendFailure(text("Cannot start a sandstorm here: this dimension is not in the dimensions config."));
             return 0;

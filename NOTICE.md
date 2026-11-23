@@ -161,8 +161,14 @@ Prompt 03's "verbatim" rule ended with prompt 04. The upstream code at commit 66
 |---|---|---|
 | `storms/config/section/SandstormSettings.java` | `getSandstormParticleDensityMultiplier()` and `dustParticleSize()` read `StormsClientConfig` | the settings are now live and editable (weatherofarrakis-storms-client.toml, /storm_tune) |
 | `storms/client/world/SandstormParticles.java` | the velocity passed to `addParticle` is `PARTICLE_VELOCITY * StormSpeed.factor(level)` instead of the constant | speed is a setting scaled by rain and thunder strength |
+| `storms/client/world/SandstormParticles.java` (2nd block) | the rain gate `level.isRaining()` is `StormInput.rain(level,1f) > 0.2f`; the spawn chance is multiplied by `StormSpeed.density(level)` | the Coriolis storm drives the same effects; density follows strength and doubles in the storm |
+| `storms/client/world/WeatherBasedAttributeInterpolator.java` | the two gradient reads use `StormInput.rain/thunder` | the Coriolis override reaches the camera attribute probe |
+| `storms/client/world/StormFogModifier.java` | fog reduction times `StormsClientConfig.coriolisFogFactor()` (1.0 outside the Coriolis storm) | storm fog of about 22 blocks |
+| `storms/client/mixin/client/AtmosphericFogEnvironmentMixin.java` | the gate `rainFogMultiplier > 0` also opens when `StormOverride.rain > 0` | vanilla only sets that multiplier from real rain |
 | `storms/client/particle/DustGrainParticle.java` | friction and lifetime come from the config; a `tick()` override reports measured grain speed to `StormSpeed` | settings, and the measurement for the debug log |
 | `storms/client/world/SandstormSounds.java` | gust gate, timer, volume, pitch and sound come from the client settings `wind_gust_*`, strength (StormInput) and the outdoor factor; counter `gustsPlayed` | hurricane gusts, tunable; the bed is our own class (`client/StormWindBed`) |
+
+New files that are not upstream: `storms/mixin/StormWeatherAccessMixin.java` (added to `islandcraft_weatherofarrakis.mixins.json`): makes vanilla's `WeatherAttributes.WeatherAccess` return the larger of the vanilla and the Coriolis rain and thunder gradient, so every weather layer (vanilla sky and fog colour, sky light, and the copied biome layers) follows the Coriolis storm.
 
 ## Sounds added in prompt 04 (licence status)
 

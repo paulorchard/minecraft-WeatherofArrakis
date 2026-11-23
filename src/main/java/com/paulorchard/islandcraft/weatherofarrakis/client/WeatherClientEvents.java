@@ -1,28 +1,25 @@
 package com.paulorchard.islandcraft.weatherofarrakis.client;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.paulorchard.islandcraft.weatherofarrakis.StormsClientConfig;
 import com.paulorchard.islandcraft.weatherofarrakis.WeatherOfArrakis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.BlockParticleOption;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.FogType;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent;
-import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 /**
- * Renders what the server said: fog (ViewportEvent), a dimming/tinting overlay (GUI layer under the HUD), blowing sand (particles), wind (looping sound).
+ * Prompt 04: the old Coriolis look (staged fog, tint overlay, blowing sand, wind loop) is removed; the storm is shown by the copied Immersive Storms effects, fed
+ * through ClientWeather and StormOverride. What stays here: camera shake, the warm fog cast of the storm itself, the storm front tint, and the debug hooks.
  * Outdoor-ness comes from the client's own sky light at the camera, smoothed, so caves and closed rooms keep their vanilla look.
  */
 @EventBusSubscriber(modid = WeatherOfArrakis.MOD_ID, value = Dist.CLIENT)
@@ -30,7 +27,6 @@ public final class WeatherClientEvents {
     /** 0 = deep inside, 1 = under open sky. Smoothed per frame. */
     private static float outdoor = 1f;
     private static long lastMs;
-    private static WindLoop wind;
 
     private WeatherClientEvents() {}
 
@@ -62,19 +58,21 @@ public final class WeatherClientEvents {
         if (roll > 0f) e.setRoll(e.getRoll() + roll * amp * (float) Math.sin(t * 29.0));
     }
 
+    /** The storm itself pushes the fog colour toward a warm red-brown (coriolis_storm_warm_cast); the sandstorm colour multiply comes from the copied attributes. */
     @SubscribeEvent
     public static void fogColor(ViewportEvent.ComputeFogColor e) {
         ClientDebug.colorEvents++;
         if (!ClientWeather.isActive()) return;
-        ClientWeather.Look look = ClientWeather.current();
-        float k = look.horizon() * outdoor;
-        if (k <= 0.001f) return;
+        ClientWeather.Eff eff = ClientWeather.current();
         float luma = Mth.clamp(0.2126f * e.getRed() + 0.7152f * e.getGreen() + 0.0722f * e.getBlue(), 0f, 1f);
-        float bright = Mth.clamp(0.15f + luma * 1.1f, 0f, 1f); // keeps night dark: the sand colour is scaled by the vanilla daylight
-        ClientDebug.colorApplied++;
-        e.setRed(Mth.lerp(k, e.getRed(), 0.62f * bright));
-        e.setGreen(Mth.lerp(k, e.getGreen(), 0.34f * bright));
-        e.setBlue(Mth.lerp(k, e.getBlue(), 0.12f * bright));
+        float bright = Mth.clamp(0.15f + luma * 1.1f, 0f, 1f); // keeps night dark
+        float k = eff.extra() * StormsClientConfig.CORIOLIS_STORM_WARM.get().floatValue() * outdoor;
+        if (k > 0.001f) {
+            ClientDebug.colorApplied++;
+            e.setRed(Mth.lerp(k, e.getRed(), 0.62f * bright));
+            e.setGreen(Mth.lerp(k, e.getGreen(), 0.34f * bright));
+            e.setBlue(Mth.lerp(k, e.getBlue(), 0.12f * bright));
+        }
         frontTint(e, bright);
     }
 
@@ -83,59 +81,18 @@ public final class WeatherClientEvents {
         if (!ClientWeather.front() || ClientWeather.kind() != 2) return;
         var f = e.getCamera().forwardVector();
         float dot = f.x() * -ClientWeather.windX() + f.z() * -ClientWeather.windZ();
-        float k = Mth.clamp(dot, 0f, 1f) * ClientWeather.current().horizon() * outdoor * 0.7f;
+        float k = Mth.clamp(dot, 0f, 1f) * ClientWeather.current().rain() * outdoor * 0.7f;
         if (k <= 0.001f) return;
         e.setRed(Mth.lerp(k, e.getRed(), 0.85f * bright));
         e.setGreen(Mth.lerp(k, e.getGreen(), 0.25f * bright));
         e.setBlue(Mth.lerp(k, e.getBlue(), 0.06f * bright));
     }
 
+    /** Only records what the game ends up with; the fog itself is set by the copied StormFogModifier (prompt 04). */
     @SubscribeEvent
     public static void fog(ViewportEvent.RenderFog e) {
         ClientDebug.fogEvents++;
         if (e.getType() == FogType.ATMOSPHERIC) ClientDebug.fogEndSeen = e.getFogData().environmentalEnd;
-        if (e.getType() != FogType.ATMOSPHERIC) return;
-        if (!ClientWeather.isActive()) return;
-        ClientWeather.Look look = ClientWeather.current();
-        float k = outdoor;
-        float target = look.fogBlocks();
-        if (target >= ClientWeather.Look.NO_FOG - 1f || k <= 0.001f) return;
-        var d = e.getFogData();
-        // The storm look ignores the player's render distance fog limits: set the render-distance, sky and cloud ends too.
-        float endNow = d.environmentalEnd;
-        float end = Mth.lerp(k, endNow, Math.min(endNow, target));
-        float start = Mth.lerp(k, d.environmentalStart, Math.min(d.environmentalStart, target * 0.1f));
-        ClientDebug.fogApplied++;
-        ClientDebug.fogEnd = end;
-        e.setFarPlaneDistance(end);
-        e.setNearPlaneDistance(start);
-        d.renderDistanceEnd = Math.min(d.renderDistanceEnd, Mth.lerp(k, d.renderDistanceEnd, end));
-        d.renderDistanceStart = Math.min(d.renderDistanceStart, Mth.lerp(k, d.renderDistanceStart, start));
-        d.skyEnd = Math.min(d.skyEnd, Mth.lerp(k, d.skyEnd, end));
-        d.cloudEnd = Math.min(d.cloudEnd, Mth.lerp(k, d.cloudEnd, end));
-    }
-
-    @EventBusSubscriber(modid = WeatherOfArrakis.MOD_ID, value = Dist.CLIENT)
-    public static final class ModBus {
-        private ModBus() {}
-
-        @SubscribeEvent
-        public static void layers(RegisterGuiLayersEvent e) {
-            // Directly above the camera overlays (so below crosshair, hotbar and the rest of the HUD).
-            e.registerAbove(VanillaGuiLayers.CAMERA_OVERLAYS, Identifier.fromNamespaceAndPath(WeatherOfArrakis.MOD_ID, "sand_overlay"), (g, delta) -> {
-                // Coriolis stages only: this overlay was never seen working (reports 02 and 03); the sandstorm now comes from the copied Immersive Storms code.
-                ClientDebug.overlayDraws++;
-                ClientWeather.Look l = ClientWeather.current();
-                float a = outdoorNow() * Mth.clamp(l.sky() * 0.12f + (1f - l.sun()) * 0.60f + l.overlay() * 0.25f, 0f, 0.78f);
-                if (a < 0.01f) return;
-                Minecraft mc = Minecraft.getInstance();
-                ClientDebug.overlayDrawn++;
-                ClientDebug.overlayAlpha = a;
-                int alpha = (int) (a * 255) & 0xFF;
-                int rgb = 0x3A1E08; // warm dark brown: dims the light and tints sky and sun
-                g.fill(0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight(), (alpha << 24) | rgb);
-            });
-        }
     }
 
     @SubscribeEvent
@@ -143,9 +100,11 @@ public final class WeatherClientEvents {
         e.getDispatcher().register(net.minecraft.commands.Commands.literal("storm_debug").executes(c -> {
             Minecraft mc = Minecraft.getInstance();
             var p = ClientDebug.last;
+            var eff = ClientWeather.current();
             String s = "payloads=" + ClientDebug.payloads + (p == null ? " (none received)" : " last: kind=" + p.kind() + " stage=" + p.stage() + " intensity=" + p.intensity() + " wind=(" + p.windX() + "," + p.windZ() + ") blend=" + p.blendSeconds() + "s received at game time " + ClientDebug.lastGameTime)
-                    + "; dimension=" + (mc.level == null ? "none" : mc.level.dimension().identifier()) + "; outdoor=" + ClientDebug.outdoor + "; look=" + ClientWeather.current()
-                    + "; fog end=" + ClientDebug.fogEnd + "; particles/s=" + ClientDebug.particlesPerSec + "; overlay alpha=" + ClientDebug.overlayAlpha + "; wind playing=" + ClientDebug.windPlaying + " vol=" + ClientDebug.windVolume;
+                    + "; dimension=" + (mc.level == null ? "none" : mc.level.dimension().identifier()) + "; outdoor=" + ClientDebug.outdoor
+                    + "; effective rain=" + eff.rain() + " thunder=" + eff.thunder() + " extra=" + eff.extra()
+                    + "; fog end=" + ClientDebug.fogEndSeen + "; " + StormWindBed.report();
             c.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal(s), false);
             return 1;
         }));
@@ -153,11 +112,17 @@ public final class WeatherClientEvents {
 
     @SubscribeEvent
     public static void shotCommand(net.neoforged.neoforge.client.event.RegisterClientCommandsEvent e) {
-        e.getDispatcher().register(net.minecraft.commands.Commands.literal("storm_debug").then(net.minecraft.commands.Commands.literal("shot").executes(c -> {
+        var shot = net.minecraft.commands.Commands.literal("shot").executes(c -> {
             StormShot.request("storm-manual", 2f);
-            c.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal("Screenshot in 2 s (GUI hidden)."), false);
+            c.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal("Screenshot in 2 s."), false);
             return 1;
-        })));
+        }).then(net.minecraft.commands.Commands.argument("name", StringArgumentType.word()).executes(c -> {
+            String name = StringArgumentType.getString(c, "name");
+            StormShot.request(name, 1f);
+            c.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal("Screenshot " + name + ".png in 1 s."), false);
+            return 1;
+        }));
+        e.getDispatcher().register(net.minecraft.commands.Commands.literal("storm_debug").then(shot));
     }
 
     @SubscribeEvent
@@ -169,7 +134,6 @@ public final class WeatherClientEvents {
     public static void logout(ClientPlayerNetworkEvent.LoggingOut e) {
         ClientWeather.reset();
         ShakeClient.clear();
-        wind = null;
     }
 
     @SubscribeEvent
@@ -178,45 +142,10 @@ public final class WeatherClientEvents {
         LocalPlayer player = mc.player;
         ClientLevel level = mc.level;
         if (player == null || level == null) return;
-        ClientWeather.Look look = ClientWeather.current();
-        float out = outdoorNow();
-
-        // wind bed: one looping sound whose volume follows the look; quieter indoors and underground
-        float vol = look.wind() * (0.12f + 0.88f * out);
-        ClientDebug.outdoor = out;
-        ClientDebug.windVolume = vol;
-        ClientDebug.windPlaying = wind != null && !wind.isStopped();
-        if (vol > 0.005f) {
-            if (wind == null || wind.isStopped()) {
-                wind = new WindLoop();
-                mc.getSoundManager().play(wind);
-            }
-            wind.setTarget(vol);
-        } else if (wind != null) {
-            wind.setTarget(0f);
-            if (wind.volumeNow() <= 0.001f) {
-                wind.finish();
-                wind = null;
-            }
-        }
-
-        ClientDebug.tick(ClientWeather.isActive() || ClientDebug.rainGradient > 0.001f);
+        ClientDebug.outdoor = outdoorNow();
+        ClientWeather.pushOverride();
         ClientDebug.sample();
+        ClientDebug.tick(ClientWeather.isActive() || ClientDebug.rainGradient > 0.001f);
         StormShot.tick();
-        // blowing sand (Coriolis stages only now), driven from the wind direction, outdoors only
-        float rate = look.particles() * out;
-        if (rate > 0.01f && !mc.isPaused()) {
-            int count = Mth.floor(rate * 14 + level.getRandom().nextFloat());
-            BlockParticleOption sand = new BlockParticleOption(ParticleTypes.BLOCK, Blocks.SAND.defaultBlockState());
-            double wx = ClientWeather.windX(), wz = ClientWeather.windZ();
-            for (int i = 0; i < count; i++) {
-                double ox = (level.getRandom().nextDouble() - 0.5) * 24 - wx * 10;
-                double oz = (level.getRandom().nextDouble() - 0.5) * 24 - wz * 10;
-                double oy = level.getRandom().nextDouble() * 7 - 1.5;
-                double speed = 0.35 + 0.35 * look.wind();
-                ClientDebug.particles++;
-                level.addParticle(sand, player.getX() + ox, player.getY() + oy, player.getZ() + oz, wx * speed, 0.02, wz * speed);
-            }
-        }
     }
 }

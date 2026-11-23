@@ -28,7 +28,8 @@ public abstract class AtmosphericFogEnvironmentMixin {
     ) {
         original.call(fog, camera, level, renderDistance, deltaTracker);
 
-        if (this.rainFogMultiplier > 0f) {
+        // IslandCraft change (prompt 04): the Coriolis override also opens this gate (original: if (this.rainFogMultiplier > 0f))
+        if (this.rainFogMultiplier > 0f || com.paulorchard.islandcraft.weatherofarrakis.StormOverride.rain > 0f) {
             StormFogModifier.applyStormFogDistance(fog, camera, level, deltaTracker);
         }
     }

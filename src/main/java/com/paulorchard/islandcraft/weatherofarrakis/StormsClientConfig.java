@@ -45,6 +45,24 @@ public final class StormsClientConfig {
     public static final ModConfigSpec.DoubleValue WIND_GUST_VOLUME = d("wind_gust_volume", 1.0, 0.0, 2.0, "Volume of a gust at full storm.");
     public static final ModConfigSpec.DoubleValue WIND_GUST_PITCH = d("wind_gust_pitch", 0.9, 0.5, 2.0, "Pitch of a gust (each gust varies by about 15 percent).");
 
+    static {
+        B.pop();
+        B.push("coriolis");
+    }
+    public static final ModConfigSpec.DoubleValue CORIOLIS_RAIN_1 = d("coriolis_rain_1", 0.10, 0.0, 1.0, "Rain-equivalent strength of approach stage 1 (the copied sandstorm: 1.0 = a full sandstorm).");
+    public static final ModConfigSpec.DoubleValue CORIOLIS_RAIN_2 = d("coriolis_rain_2", 0.25, 0.0, 1.0, "Stage 2.");
+    public static final ModConfigSpec.DoubleValue CORIOLIS_RAIN_3 = d("coriolis_rain_3", 0.40, 0.0, 1.0, "Stage 3.");
+    public static final ModConfigSpec.DoubleValue CORIOLIS_RAIN_4 = d("coriolis_rain_4", 0.60, 0.0, 1.0, "Stage 4.");
+    public static final ModConfigSpec.DoubleValue CORIOLIS_RAIN_5 = d("coriolis_rain_5", 0.80, 0.0, 1.0, "Stage 5.");
+    public static final ModConfigSpec.DoubleValue CORIOLIS_RAIN_6 = d("coriolis_rain_6", 1.00, 0.0, 1.0, "Stage 6.");
+    public static final ModConfigSpec.DoubleValue CORIOLIS_THUNDER_5 = d("coriolis_thunder_5", 0.3, 0.0, 1.0, "Thunder-equivalent strength of stage 5 (thicker fog, darker, faster dust, deeper wind). Stages 1 to 4 have none.");
+    public static final ModConfigSpec.DoubleValue CORIOLIS_THUNDER_6 = d("coriolis_thunder_6", 0.7, 0.0, 1.0, "Thunder-equivalent strength of stage 6.");
+    public static final ModConfigSpec.DoubleValue CORIOLIS_STORM_FOG = d("coriolis_storm_fog_multiplier", 0.4, 0.05, 1.0, "Multiplies the thunder fog distance in the storm itself (0.4 gives about 22 blocks).");
+    public static final ModConfigSpec.DoubleValue CORIOLIS_STORM_DENSITY = d("coriolis_storm_density_multiplier", 2.0, 1.0, 5.0, "Dust density factor in the storm itself.");
+    public static final ModConfigSpec.DoubleValue CORIOLIS_STORM_SPEED = d("coriolis_storm_speed_multiplier", 1.5, 1.0, 5.0, "Dust speed factor in the storm itself.");
+    public static final ModConfigSpec.DoubleValue CORIOLIS_STORM_WARM = d("coriolis_storm_warm_cast", 0.35, 0.0, 1.0, "How far the fog colour is pushed toward a warm red-brown in the storm itself.");
+    public static final ModConfigSpec.BooleanValue CORIOLIS_LOOK_ENABLED = b("coriolis_look_enabled", true, "false = the Coriolis storm uses no sandstorm effects at all (for comparing with plain gameplay).");
+
     public static final ModConfigSpec SPEC;
 
     static {
@@ -53,6 +71,12 @@ public final class StormsClientConfig {
     }
 
     private StormsClientConfig() {}
+
+    /** Fog distance factor of the Coriolis storm (1.0 outside it); read by the copied StormFogModifier. */
+    public static float coriolisFogFactor() {
+        float extra = StormOverride.extra;
+        return extra <= 0f ? 1f : (float) (1.0 + (CORIOLIS_STORM_FOG.get() - 1.0) * extra);
+    }
 
     private static ModConfigSpec.BooleanValue b(String name, boolean def, String comment) {
         ModConfigSpec.BooleanValue v = B.comment(comment).define(name, def);
