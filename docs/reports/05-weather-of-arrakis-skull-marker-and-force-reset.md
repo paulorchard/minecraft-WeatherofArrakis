@@ -1,5 +1,5 @@
 # Report — Prompt 05 Weather of Arrakis: skeleton skull death marker and a forced chunk reset command
-Status: done (both parts built and tested headless and with a real player in the dev client; nothing was seen by a human)   Commit / tag: step-11 4f8c9e2, step-12 HASH
+Status: done (both parts built and tested headless and with a real player in the dev client; nothing was seen by a human)   Commit / tag: step-11 4f8c9e2, step-12 66c348f
 
 ## What was built
 - **Part 1, skull marker (tag step-11).** `server/DeathMarker.java` replaces the inline bone code of `Exposure`. Config `bone_block` is gone; `bone_marker_style = "skull" | "bone_block" | "none"` (default skull, validated). Spot rules unchanged from prompt 01: the death position, else down up to 8, else the eight neighbours at the same height; the spot must be air without fluid and the block below needs a sturdy top face. `skull` sets `minecraft:skeleton_skull` with `rotation` = `level.getRandom().nextInt(16)`; `bone_block` places the old block; `none` places nothing and logs. A placement (never the block type) calls `Records.onMarker` (was `onBoneMarker`), which marks the chunk altered. Comments, the death-marker section name and the config text say marker/skull now; there was no README mention.
