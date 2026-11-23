@@ -49,7 +49,7 @@ public final class WeatherConfig {
     public static final ModConfigSpec.IntValue DURABILITY_LOSS = B.comment("Durability lost per second by armour and the held item once exposed; an item at 0 is torn away.").defineInRange("durability_loss_per_second", 4, 0, 10000);
     public static final ModConfigSpec.DoubleValue HEALTH_LOSS_ARMOURED = B.comment("Health lost per second while any armour remains.").defineInRange("health_loss_armoured", 2.0, 0.0, 1000.0);
     public static final ModConfigSpec.DoubleValue HEALTH_LOSS_STRIPPED = B.comment("Health lost per second once no armour remains.").defineInRange("health_loss_stripped", 10.0, 0.0, 1000.0);
-    public static final ModConfigSpec.ConfigValue<String> BONE_BLOCK = B.comment("Block placed as a marker where a player dies in a storm.").define("bone_block", "minecraft:bone_block");
+    public static final ModConfigSpec.ConfigValue<String> BONE_MARKER_STYLE = B.comment("Marker left where a player dies in a storm: skull (a skeleton skull on the floor, random angle), bone_block (the old marker; bone blocks already in a world stay), none (nothing, only a log line).").define("bone_marker_style", "skull", o -> o instanceof String v && (v.equals("skull") || v.equals("bone_block") || v.equals("none")));
 
     // ---- lightning and shake (Part 4) ----
     public static final ModConfigSpec.BooleanValue LIGHTNING_ENABLED = B.comment("Lightning during the storm (visual; no fire, no block damage, no conversions).").define("lightning_enabled", true);

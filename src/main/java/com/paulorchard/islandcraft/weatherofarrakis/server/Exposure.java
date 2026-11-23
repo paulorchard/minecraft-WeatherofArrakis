@@ -27,7 +27,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 
-/** Part 5: shelter check, grace, gear loss, health loss and bones. Runs once a second per player while the phase is STORM. */
+/** Part 5: shelter check, grace, gear loss, health loss and the death marker. Runs once a second per player while the phase is STORM. */
 public final class Exposure {
     public static final ResourceKey<DamageType> STORM_DAMAGE = ResourceKey.create(Registries.DAMAGE_TYPE,
             Identifier.fromNamespaceAndPath(WeatherOfArrakis.MOD_ID, "arrakis_coriolis_storm"));
@@ -157,36 +157,14 @@ public final class Exposure {
         }
     }
 
-    // ---- bones ----
+    // ---- death marker ----
 
     public static void onDeath(LivingDeathEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer p) || !(p.level() instanceof ServerLevel level)) return;
         if (!WeatherConfig.isQualifying(level) || !WeatherConfig.EXPOSURE_ENABLED.get()) return;
         if (WeatherManager.state(level).phase != Phase.STORM) return;
-        Block bone = BuiltInRegistries.BLOCK.getOptional(Identifier.parse(WeatherConfig.BONE_BLOCK.get())).orElse(net.minecraft.world.level.block.Blocks.BONE_BLOCK);
-        BlockPos at = findBoneSpot(level, p.blockPosition());
-        if (at != null) {
-            level.setBlock(at, bone.defaultBlockState(), 3);
-            Records.onBoneMarker(level, at);
-        }
+        DeathMarker.place(level, p.blockPosition());
         TRACK.remove(p.getUUID());
-    }
-
-    private static boolean free(ServerLevel level, BlockPos pos) {
-        if (!level.hasChunkAt(pos)) return false;
-        BlockState s = level.getBlockState(pos);
-        if (!s.isAir() || !s.getFluidState().isEmpty()) return false;
-        BlockPos below = pos.below();
-        return level.getBlockState(below).isFaceSturdy(level, below, net.minecraft.core.Direction.UP);
-    }
-
-    /** The spot itself, else down up to 8, else the eight neighbours at the same height. Null when nothing fits. */
-    static BlockPos findBoneSpot(ServerLevel level, BlockPos death) {
-        if (free(level, death)) return death;
-        for (int dy = 1; dy <= 8; dy++) if (free(level, death.below(dy))) return death.below(dy);
-        for (int dx = -1; dx <= 1; dx++)
-            for (int dz = -1; dz <= 1; dz++) if ((dx != 0 || dz != 0) && free(level, death.offset(dx, 0, dz))) return death.offset(dx, 0, dz);
-        return null;
     }
 
     public static void forget(UUID id) {

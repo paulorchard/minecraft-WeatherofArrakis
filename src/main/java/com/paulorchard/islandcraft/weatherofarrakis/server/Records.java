@@ -12,7 +12,7 @@ import net.neoforged.neoforge.event.level.block.BreakBlockEvent;
 
 /**
  * Chunk records glue (Part 6). Counted as altered: a block a player places or breaks (NeoForge BlockEvent.EntityPlaceEvent with a player,
- * BlockEvent.BreakEvent) and a storm-death bone marker. NOT counted: pistons, fluids, explosions, fire, plant growth, entity actions
+ * BlockEvent.BreakEvent) and a storm-death marker (skull or bone block; keyed on the placement, not on the block type). NOT counted: pistons, fluids, explosions, fire, plant growth, entity actions
  * (endermen, falling blocks), commands, and changes to container contents.
  */
 public final class Records {
@@ -35,7 +35,7 @@ public final class Records {
         data.setDirty();
     }
 
-    public static void onBoneMarker(ServerLevel level, BlockPos pos) {
+    public static void onMarker(ServerLevel level, BlockPos pos) {
         markAltered(level, ChunkPos.containing(pos));
     }
 
