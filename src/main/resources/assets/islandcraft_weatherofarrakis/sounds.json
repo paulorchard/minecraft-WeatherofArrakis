@@ -1,21 +1,14 @@
 {
     "weather.strong_wind": {
         "sounds": [
-            "islandcraft_weatherofarrakis:weather/wind/strong1",
-            "islandcraft_weatherofarrakis:weather/wind/strong2",
-            "islandcraft_weatherofarrakis:weather/wind/strong3"
+            "islandcraft_weatherofarrakis:weather/generated/gen_gust1",
+            "islandcraft_weatherofarrakis:weather/generated/gen_gust2",
+            "islandcraft_weatherofarrakis:weather/generated/gen_gust3"
         ],
         "subtitle": "subtitles.islandcraft_weatherofarrakis.weather.strong_wind"
     },
     "weather.soft_wind": {
-        "sounds": [
-            "islandcraft_weatherofarrakis:weather/wind/soft1",
-            "islandcraft_weatherofarrakis:weather/wind/soft2",
-            "islandcraft_weatherofarrakis:weather/wind/soft3",
-            "islandcraft_weatherofarrakis:weather/wind/soft4",
-            "islandcraft_weatherofarrakis:weather/wind/soft5",
-            "islandcraft_weatherofarrakis:weather/wind/soft6"
-        ],
+        "sounds": [ "islandcraft_weatherofarrakis:weather/generated/gen_gust1" ],
         "subtitle": "subtitles.islandcraft_weatherofarrakis.weather.soft_wind"
     },
     "weather.bed_roar": { "sounds": [ "islandcraft_weatherofarrakis:weather/generated/gen_roar" ] },

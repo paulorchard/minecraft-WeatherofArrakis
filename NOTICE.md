@@ -15,7 +15,7 @@ Every copied Java file keeps its upstream content and gains one first line: `// 
 1. Upstream `META-INF/neoforge.mods.toml` says `license = "MIT"`, but its LICENSE file is LGPL-3.0 (and its `fabric.mod.json` says `LGPL-3.0`). We follow the LICENSE file: LGPL-3.0-or-later.
 2. Upstream `CREDITS` also names a "Trinkets Updated" MIT build script (irrelevant to us, not copied) and five Pixabay sound effects (next section).
 
-## RELEASE BLOCKER: the sound files (Pixabay)
+## Sound files (Pixabay): RESOLVED, the files were deleted (see "Sounds added in prompt 04" below)
 
 The wind and sandstorm `.ogg` files are copied so the owner can hear the real thing. Upstream's CREDITS credits them to Pixabay authors (storegraphic, Harisankar Sahoo, u_m9b3aw9s3j, Ghostie Graves, Jurij). Pixabay's licence allows use in a project but not redistributing the files on their own, and the repository gives no per-file terms. **Before this mod is published: keep them with the credits, replace them, or drop them.** Files: everything under `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/`.
 
@@ -122,17 +122,6 @@ Resources:
 
 - `src/main/resources/assets/islandcraft_weatherofarrakis/particles/black_rain.json`
 - `src/main/resources/assets/islandcraft_weatherofarrakis/particles/dust_grain.json`
-- `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/weather/sandstorm/soft1.ogg`
-- `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/weather/sandstorm/soft2.ogg`
-- `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/weather/wind/soft1.ogg`
-- `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/weather/wind/soft2.ogg`
-- `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/weather/wind/soft3.ogg`
-- `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/weather/wind/soft4.ogg`
-- `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/weather/wind/soft5.ogg`
-- `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/weather/wind/soft6.ogg`
-- `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/weather/wind/strong1.ogg`
-- `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/weather/wind/strong2.ogg`
-- `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/weather/wind/strong3.ogg`
 - `src/main/resources/assets/islandcraft_weatherofarrakis/sounds.json`
 - `src/main/resources/assets/islandcraft_weatherofarrakis/textures/particle/dust_grain/var0.png`
 - `src/main/resources/assets/islandcraft_weatherofarrakis/textures/particle/dust_grain/var1.png`
@@ -175,4 +164,4 @@ New files that are not upstream: `storms/mixin/StormWeatherAccessMixin.java` (ad
 - `tools/audition/generated/gen_roar.ogg`, `gen_howl.ogg`, `gen_hiss.ogg`: generated from noise by `tools/audition/node/build.mjs`. Ours, no third-party terms.
 - Vanilla sounds are only ever referenced by event id; their audio is extracted into the gitignored `tools/audition/vanilla/` for listening and is never committed or shipped.
 - `src/main/resources/assets/islandcraft_weatherofarrakis/sounds/weather/generated/*.ogg` (copies of the generated files above): shipped, ours, default wind bed, hiss layer and gusts.
-- The Pixabay files (`sounds/weather/wind/*`, `sounds/weather/sandstorm/*`) are still in the jar but are no longer played by default (the gust sound default is generated; they play only if `wind_gust_sound` is set empty). RELEASE BLOCKER stays until they are deleted (delete both folders and the two events in `sounds.json`).
+- The Pixabay files (`sounds/weather/wind/*`, `sounds/weather/sandstorm/*`) were deleted from the repository and the jar. The events `weather.strong_wind` and `weather.soft_wind` (still used by the copied biome settings) now play the generated gust sounds. No third-party audio is shipped any more. The files remain in git history before this commit.
